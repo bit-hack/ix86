@@ -1,0 +1,11 @@
+﻿---
+BasedOnStyle: LLVM
+# AllowAllArgumentsOnNextLine: 'true'
+AllowShortCaseLabelsOnASingleLine: 'false'
+AllowShortFunctionsOnASingleLine: None
+# AllowShortIfStatementsOnASingleLine: Never
+# AllowShortLambdasOnASingleLine: None
+AllowShortLoopsOnASingleLine: 'false'
+IndentWidth: '2'
+
+...

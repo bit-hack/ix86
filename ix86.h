@@ -32,50 +32,58 @@
 extern "C" {
 #endif
 
-#define u8  uint8_t
+#define u8 uint8_t
 #define u16 uint16_t
 #define u32 uint32_t
 #define u64 uint64_t
 
-#define s8  int8_t
+#define s8 int8_t
 #define s16 int16_t
 #define s32 int32_t
 #define s64 int64_t
 
 // x86Flags defines
-#define X86FLAG_FPU			0x00000001
-#define X86FLAG_VME			0x00000002
-#define X86FLAG_DEBUGEXT	0x00000004
-#define X86FLAG_4MPAGE		0x00000008
-#define X86FLAG_TSC			0x00000010
-#define X86FLAG_MSR			0x00000020
-#define X86FLAG_PAE			0x00000040
-#define X86FLAG_MCHKXCP		0x00000080
-#define X86FLAG_CMPXCHG8B	0x00000100
-#define X86FLAG_APIC		0x00000200
-#define X86FLAG_SYSENTER	0x00000800
-#define X86FLAG_MTRR		0x00001000
-#define X86FLAG_GPE			0x00002000
-#define X86FLAG_MCHKARCH	0x00004000
-#define X86FLAG_CMOV		0x00008000
-#define X86FLAG_PAT			0x00010000
-#define X86FLAG_PSE36		0x00020000
-#define X86FLAG_PN			0x00040000
-#define X86FLAG_MMX			0x00800000
-#define X86FLAG_FXSAVE		0x01000000
-#define X86FLAG_SSE			0x02000000
+#define X86FLAG_FPU 0x00000001
+#define X86FLAG_VME 0x00000002
+#define X86FLAG_DEBUGEXT 0x00000004
+#define X86FLAG_4MPAGE 0x00000008
+#define X86FLAG_TSC 0x00000010
+#define X86FLAG_MSR 0x00000020
+#define X86FLAG_PAE 0x00000040
+#define X86FLAG_MCHKXCP 0x00000080
+#define X86FLAG_CMPXCHG8B 0x00000100
+#define X86FLAG_APIC 0x00000200
+#define X86FLAG_SYSENTER 0x00000800
+#define X86FLAG_MTRR 0x00001000
+#define X86FLAG_GPE 0x00002000
+#define X86FLAG_MCHKARCH 0x00004000
+#define X86FLAG_CMOV 0x00008000
+#define X86FLAG_PAT 0x00010000
+#define X86FLAG_PSE36 0x00020000
+#define X86FLAG_PN 0x00040000
+#define X86FLAG_MMX 0x00800000
+#define X86FLAG_FXSAVE 0x01000000
+#define X86FLAG_SSE 0x02000000
 
 // x86EFlags defines
 
-#define X86EFLAG_MMXEXT		0x00400000
-#define X86EFLAG_3DNOWEXT	0x40000000
-#define X86EFLAG_3DNOW		0x80000000
+#define X86EFLAG_MMXEXT 0x00400000
+#define X86EFLAG_3DNOWEXT 0x40000000
+#define X86EFLAG_3DNOW 0x80000000
 
 /* general defines */
-#define write8(val)  *(u8 *)x86Ptr = val; x86Ptr++;
-#define write16(val) *(u16*)x86Ptr = val; x86Ptr+=2;
-#define write32(val) *(u32*)x86Ptr = val; x86Ptr+=4;
-#define write64(val) *(u64*)x86Ptr = val; x86Ptr+=8;
+#define write8(val)                                                            \
+  *(u8 *)x86Ptr = val;                                                         \
+  x86Ptr++;
+#define write16(val)                                                           \
+  *(u16 *)x86Ptr = val;                                                        \
+  x86Ptr += 2;
+#define write32(val)                                                           \
+  *(u32 *)x86Ptr = val;                                                        \
+  x86Ptr += 4;
+#define write64(val)                                                           \
+  *(u64 *)x86Ptr = val;                                                        \
+  x86Ptr += 8;
 
 #define EAX 0
 #define EBX 3
@@ -104,8 +112,8 @@ extern "C" {
 #define XMM6 6
 #define XMM7 7
 
-extern s8  *x86Ptr;
-extern u8  *j8Ptr[32];
+extern s8 *x86Ptr;
+extern u8 *j8Ptr[32];
 extern u32 *j32Ptr[32];
 
 void x86Init();
@@ -115,7 +123,6 @@ void x86Shutdown();
 void x86SetJ8(u8 *j8);
 void x86SetJ32(u32 *j32);
 void x86Align(int bytes);
-
 
 /********************/
 /* IX86 intructions */
@@ -346,70 +353,70 @@ void NEG32R(int from);
 ////////////////////////////////////
 
 /* jmp rel8 */
-u8*  JMP8(u8 to);
+u8 *JMP8(u8 to);
 
 /* jmp rel32 */
-u32* JMP32(u32 to);
+u32 *JMP32(u32 to);
 /* jmp r32 */
 void JMP32R(int to);
 
 /* je rel8 */
-u8*  JE8(u8 to);
+u8 *JE8(u8 to);
 /* jz rel8 */
-u8*  JZ8(u8 to);
+u8 *JZ8(u8 to);
 /* jg rel8 */
-u8*  JG8(u8 to);
+u8 *JG8(u8 to);
 /* jge rel8 */
-u8*  JGE8(u8 to);
+u8 *JGE8(u8 to);
 /* jl rel8 */
-u8*  JL8(u8 to);
+u8 *JL8(u8 to);
 /* jle rel8 */
-u8*  JLE8(u8 to);
+u8 *JLE8(u8 to);
 /* jne rel8 */
-u8*  JNE8(u8 to);
+u8 *JNE8(u8 to);
 /* jnz rel8 */
-u8*  JNZ8(u8 to);
+u8 *JNZ8(u8 to);
 /* jng rel8 */
-u8*  JNG8(u8 to);
+u8 *JNG8(u8 to);
 /* jnge rel8 */
-u8*  JNGE8(u8 to);
+u8 *JNGE8(u8 to);
 /* jnl rel8 */
-u8*  JNL8(u8 to);
+u8 *JNL8(u8 to);
 /* jnle rel8 */
-u8*  JNLE8(u8 to);
+u8 *JNLE8(u8 to);
 /* jo rel8 */
-u8*  JO8(u8 to);
+u8 *JO8(u8 to);
 /* jno rel8 */
-u8*  JNO8(u8 to);
+u8 *JNO8(u8 to);
 
 /* je rel32 */
-u32* JE32(u32 to);
+u32 *JE32(u32 to);
 /* jz rel32 */
-u32* JZ32(u32 to);
+u32 *JZ32(u32 to);
 /* jg rel32 */
-u32* JG32(u32 to);
+u32 *JG32(u32 to);
 /* jge rel32 */
-u32* JGE32(u32 to);
+u32 *JGE32(u32 to);
 /* jl rel32 */
-u32* JL32(u32 to);
+u32 *JL32(u32 to);
 /* jle rel32 */
-u32* JLE32(u32 to);
+u32 *JLE32(u32 to);
 /* jne rel32 */
-u32* JNE32(u32 to);
+u32 *JNE32(u32 to);
 /* jnz rel32 */
-u32* JNZ32(u32 to);
+u32 *JNZ32(u32 to);
 /* jng rel32 */
-u32* JNG32(u32 to);
+u32 *JNG32(u32 to);
 /* jnge rel32 */
-u32* JNGE32(u32 to);
+u32 *JNGE32(u32 to);
 /* jnl rel32 */
-u32* JNL32(u32 to);
+u32 *JNL32(u32 to);
 /* jnle rel32 */
-u32* JNLE32(u32 to);
+u32 *JNLE32(u32 to);
 /* jo rel32 */
-u32* JO32(u32 to);
+u32 *JO32(u32 to);
 /* jno rel32 */
-u32* JNO32(u32 to);
+u32 *JNO32(u32 to);
 
 /* call func */
 void CALLFunc(u32 func); // based on CALL32
@@ -573,14 +580,14 @@ void PADDDMtoR(int to, u32 from);
 /* emms */
 void EMMS();
 void FEMMS();
-void BT32ItoR(int to,int from);
-void RCR32ItoR(int to,int from);
+void BT32ItoR(int to, int from);
+void RCR32ItoR(int to, int from);
 
-//Basara:changed
+// Basara:changed
 void PADDSBRtoR(int to, int from);
 void PADDSWRtoR(int to, int from);
 void PADDSDRtoR(int to, int from);
-void PSUBSBRtoR(int to, int from); 
+void PSUBSBRtoR(int to, int from);
 void PSUBSWRtoR(int to, int from);
 void PSUBSDRtoR(int to, int from);
 
@@ -588,91 +595,93 @@ void PSUBBRtoR(int to, int from);
 void PSUBWRtoR(int to, int from);
 void PSUBDRtoR(int to, int from);
 
-void MOVQ64ItoR(int reg,u64 i); //Prototype.Todo add all consts to end of block.not after jr $+8
+void MOVQ64ItoR(
+    int reg,
+    u64 i); // Prototype.Todo add all consts to end of block.not after jr $+8
 
-void PMAXSWRtoR(int to,int from);
-void PMINSWRtoR(int to,int from);
+void PMAXSWRtoR(int to, int from);
+void PMINSWRtoR(int to, int from);
 
-void PCMPEQBRtoR(int to,int from);
-void PCMPEQWRtoR(int to,int from);
-void PCMPEQDRtoR(int to,int from);
+void PCMPEQBRtoR(int to, int from);
+void PCMPEQWRtoR(int to, int from);
+void PCMPEQDRtoR(int to, int from);
 
-void PCMPGTBRtoR(int to,int from);
-void PCMPGTWRtoR(int to,int from);
-void PCMPGTDRtoR(int to,int from);
+void PCMPGTBRtoR(int to, int from);
+void PCMPGTWRtoR(int to, int from);
+void PCMPGTDRtoR(int to, int from);
 
-void PSRLWItoR(int to,int from);
-void PSRLDItoR(int to,int from);
-void PSLLWItoR(int to,int from);
-void PSLLDItoR(int to,int from);
-void PSRAWItoR(int to,int from);
-void PSRADItoR(int to,int from);
+void PSRLWItoR(int to, int from);
+void PSRLDItoR(int to, int from);
+void PSLLWItoR(int to, int from);
+void PSLLDItoR(int to, int from);
+void PSRAWItoR(int to, int from);
+void PSRADItoR(int to, int from);
 
-//Added:basara 11.01.2003
+// Added:basara 11.01.2003
 void FCOMP32(u32 from);
 void FNSTSWtoAX();
 void SETNZ8R(int to);
 
-//Added:basara 14.01.2003
-void PFCMPEQMtoR(int to,int from);
-void PFCMPGTMtoR(int to,int from);
-void PFCMPGEMtoR(int to,int from);
+// Added:basara 14.01.2003
+void PFCMPEQMtoR(int to, int from);
+void PFCMPGTMtoR(int to, int from);
+void PFCMPGEMtoR(int to, int from);
 
-void PFADDMtoR(int to,int from);
-void PFADDRtoR(int to,int from);
+void PFADDMtoR(int to, int from);
+void PFADDRtoR(int to, int from);
 
-void PFSUBMtoR(int to,int from);
-void PFSUBRtoR(int to,int from);
+void PFSUBMtoR(int to, int from);
+void PFSUBRtoR(int to, int from);
 
-void PFMULMtoR(int to,int from);
-void PFMULRtoR(int to,int from);
+void PFMULMtoR(int to, int from);
+void PFMULRtoR(int to, int from);
 
-void PFRCPMtoR(int to,int from);
-void PFRCPRtoR(int to,int from);
-void PFRCPIT1RtoR(int to,int from);
-void PFRCPIT2RtoR(int to,int from);
+void PFRCPMtoR(int to, int from);
+void PFRCPRtoR(int to, int from);
+void PFRCPIT1RtoR(int to, int from);
+void PFRCPIT2RtoR(int to, int from);
 
-void PFRSQRTRtoR(int to,int from);
-void PFRSQIT1RtoR(int to,int from);
+void PFRSQRTRtoR(int to, int from);
+void PFRSQIT1RtoR(int to, int from);
 
-void PF2IDMtoR(int to,int from);
-void PF2IDRtoR(int to,int from);
-void PI2FDMtoR(int to,int from);
-void PI2FDRtoR(int to,int from);
+void PF2IDMtoR(int to, int from);
+void PF2IDRtoR(int to, int from);
+void PI2FDMtoR(int to, int from);
+void PI2FDRtoR(int to, int from);
 
-void PFMAXMtoR(int to,int from);
-void PFMAXRtoR(int to,int from);
-void PFMINMtoR(int to,int from);
-void PFMINRtoR(int to,int from);
+void PFMAXMtoR(int to, int from);
+void PFMAXRtoR(int to, int from);
+void PFMINMtoR(int to, int from);
+void PFMINRtoR(int to, int from);
 
 void MOVDMtoR(int to, u32 from);
 void MOVDRtoM(u32 to, int from);
 void MOVD32RtoR(int to, int from);
 void MOVD64RtoR(int to, int from);
 
-void MOVQRtoR(int to,int from);
+void MOVQRtoR(int to, int from);
 
-//if to==from MMLO=MMHI
-void PUNPCKHDQRtoR(int to,int from);
+// if to==from MMLO=MMHI
+void PUNPCKHDQRtoR(int to, int from);
 
-//if to==from MMHI=MMLO
-void PUNPCKLDQRtoR(int to,int from);
+// if to==from MMHI=MMLO
+void PUNPCKLDQRtoR(int to, int from);
 
 /*
-	SSE	intructions 
+        SSE	intructions
 */
-void MOVAPSMtoR(int to,int from);
-void MOVAPSRtoM(int to,int from);
-void MOVAPSRtoR(int to,int from);
+void MOVAPSMtoR(int to, int from);
+void MOVAPSRtoM(int to, int from);
+void MOVAPSRtoR(int to, int from);
 
-void ORPSMtoR(int to,int from);
-void ORPSRtoR(int to,int from);
+void ORPSMtoR(int to, int from);
+void ORPSRtoR(int to, int from);
 
-void XORPSMtoR(int to,int from);
-void XORPSRtoR(int to,int from);
+void XORPSMtoR(int to, int from);
+void XORPSRtoR(int to, int from);
 
-void ANDPSMtoR(int to,int from);
-void ANDPSRtoR(int to,int from);
+void ANDPSMtoR(int to, int from);
+void ANDPSRtoR(int to, int from);
 
 #ifdef __cplusplus
 }
