@@ -26,14 +26,21 @@
 #ifndef __IX86_H__
 #define __IX86_H__
 
+#include <cstdint>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// include basic types
-#include "../psxcommon.h"
-#include "../r3000a.h"
-#include "../psxhle.h"
+#define u8  uint8_t
+#define u16 uint16_t
+#define u32 uint32_t
+#define u64 uint64_t
+
+#define s8  int8_t
+#define s16 int16_t
+#define s32 int32_t
+#define s64 int64_t
 
 // x86Flags defines
 #define X86FLAG_FPU			0x00000001
@@ -102,7 +109,7 @@ extern u8  *j8Ptr[32];
 extern u32 *j32Ptr[32];
 
 void x86Init();
-void x86SetPtr(char *ptr);
+void x86SetPtr(int8_t *ptr);
 void x86Shutdown();
 
 void x86SetJ8(u8 *j8);

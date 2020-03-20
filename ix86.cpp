@@ -23,8 +23,9 @@
  *           alexey silinov
  */
 
-#ifdef __i386__
+#if defined(__i386__) || !defined(_WIN64)
 
+#include <cassert>
 #include "ix86.h"
 
 s8  *x86Ptr;
@@ -34,7 +35,7 @@ u32 *j32Ptr[32];
 void x86Init() {
 }
 
-void x86SetPtr(char *ptr) {
+void x86SetPtr(int8_t *ptr) {
 	x86Ptr = ptr;
 }
 
@@ -43,8 +44,7 @@ void x86Shutdown() {
 
 void x86SetJ8(u8 *j8) {
 	u32 jump = (x86Ptr - (s8*)j8) - 1;
-
-	if (jump > 0x7f) printf("j8 greater than 0x7f!!\n");
+	assert(jump <= 0x7f);
 	*j8 = (u8)jump;
 }
 
@@ -73,7 +73,7 @@ void x86Align(int bytes) {
 	write8((0xC0) | (to)); }
 
 #define J8Rel(cc, to) { \
-	write8(cc); write8(to); return x86Ptr - 1; }
+	write8(cc); write8(to); return (u8*)(x86Ptr - 1); }
 
 #define J32Rel(cc, to) { \
 	write8(0x0F); write8(cc); write32(to); return (u32*)(x86Ptr - 4); }
@@ -713,7 +713,7 @@ void NEG32R(int from) {
 u8*  JMP8(u8 to) {
 	write8(0xEB); 
 	write8(to);
-	return x86Ptr - 1;
+	return (u8*)(x86Ptr - 1);
 }
 
 /* jmp rel32 */
