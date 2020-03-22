@@ -48,23 +48,23 @@ struct ix86 {
     SCALE8 = 3,
   };
 
-  enum cmov_cc_t {
-    CC_OF = 0x40, // overflow         (OF=1)
-    CC_NO = 0x41, // not overflow     (OF=0)
-    CC_BL = 0x42, // below            (CF=1)
-    CC_AE = 0x43, // above or equal   (CF=0)
-    CC_EQ = 0x44, // equal            (ZF=1)
-    CC_NE = 0x45, // not equal        (ZF=0)
-    CC_BE = 0x46, // below or equal   (CF=1 or ZF=1)
-    CC_AB = 0x47, // above            (CF=0 and ZF=0)
-    CC_SF = 0x48, // sign             (SF=1)
-    CC_NS = 0x49, // not sign         (SF=0)
-    CC_PF = 0x4a, // parity           (PF=1)
-    CC_NP = 0x4b, // parity odd       (PF=0)
-    CC_LT = 0x4c, // less             (SF!=OF)
-    CC_GE = 0x4d, // greater or equal (SF=OF)
-    CC_LE = 0x4e, // less or equal    (ZF=1 or SF!=OF)
-    CC_GT = 0x4f, // greater          (ZF=0 and SF=OF)
+  enum cc_t {
+    CC_O  = 0x0, // overflow         JO    (OF=1)
+    CC_NO = 0x1, // not overflow     JNO   (OF=0)
+    CC_C  = 0x2, // carry            JC    (CF=1)
+    CC_AE = 0x3, // above or equal   JAE   (CF=0)
+    CC_EQ = 0x4, // equal            JE    (ZF=1)
+    CC_NE = 0x5, // not equal        JNE   (ZF=0)
+    CC_BE = 0x6, // below or equal   JBE   (CF=1 or ZF=1)
+    CC_AB = 0x7, // above            JA    (CF=0 and ZF=0)
+    CC_S  = 0x8, // sign             JS    (SF=1)
+    CC_NS = 0x9, // not sign         JNS   (SF=0)
+    CC_P  = 0xa, // parity           JP    (PF=1)
+    CC_NP = 0xb, // parity odd       JNP   (PF=0)
+    CC_LT = 0xc, // less             JL    (SF!=OF)
+    CC_GE = 0xd, // greater or equal JGE   (SF=OF)
+    CC_LE = 0xe, // less or equal    JLE   (ZF=1 or SF!=OF)
+    CC_GT = 0xf, // greater          JG    (ZF=0 and SF=OF)
   };
 
   ix86(void *ptr, size_t size)
@@ -142,9 +142,9 @@ struct ix86 {
   void MOVZX32M16toR(gp_reg_t to, void *from);
 
   // conditional move
-  void CMOV32RtoR(cmov_cc_t cc, gp_reg_t to, gp_reg_t from);
+  void CMOV32RtoR(cc_t cc, gp_reg_t to, gp_reg_t from);
   // conditional move
-  void CMOV32MtoR(cmov_cc_t cc, gp_reg_t to, void *from);
+  void CMOV32MtoR(cc_t cc, gp_reg_t to, void *from);
 
   // arithmetic instructions
 
@@ -274,9 +274,9 @@ struct ix86 {
 
   // jump instructions
 
-  // jump helpers
-  uint8_t *J8Rel(int32_t cc, int32_t to);
-  uint32_t *J32Rel(int32_t cc, int32_t to);
+  // conditional jump
+  uint8_t *J8Rel(cc_t cc, int32_t to);
+  uint32_t *J32Rel(cc_t cc, int32_t to);
 
   // jmp rel8
   uint8_t *JMP8(uint8_t to);
@@ -284,64 +284,6 @@ struct ix86 {
   uint32_t *JMP32(uint32_t to);
   // jmp r32
   void JMP32R(int32_t to);
-
-  // je rel8
-  uint8_t *JE8(uint8_t to);
-  // jz rel8
-  uint8_t *JZ8(uint8_t to);
-  // jg rel8
-  uint8_t *JG8(uint8_t to);
-  // jge rel8
-  uint8_t *JGE8(uint8_t to);
-  // jl rel8
-  uint8_t *JL8(uint8_t to);
-  // jle rel8
-  uint8_t *JLE8(uint8_t to);
-  // jne rel8
-  uint8_t *JNE8(uint8_t to);
-  // jnz rel8
-  uint8_t *JNZ8(uint8_t to);
-  // jng rel8
-  uint8_t *JNG8(uint8_t to);
-  // jnge rel8
-  uint8_t *JNGE8(uint8_t to);
-  // jnl rel8
-  uint8_t *JNL8(uint8_t to);
-  // jnle rel8
-  uint8_t *JNLE8(uint8_t to);
-  // jo rel8
-  uint8_t *JO8(uint8_t to);
-  // jno rel8
-  uint8_t *JNO8(uint8_t to);
-
-  // je rel32
-  uint32_t *JE32(uint32_t to);
-  // jz rel32
-  uint32_t *JZ32(uint32_t to);
-  // jg rel32
-  uint32_t *JG32(uint32_t to);
-  // jge rel32
-  uint32_t *JGE32(uint32_t to);
-  // jl rel32
-  uint32_t *JL32(uint32_t to);
-  // jle rel32
-  uint32_t *JLE32(uint32_t to);
-  // jne rel32
-  uint32_t *JNE32(uint32_t to);
-  // jnz rel32
-  uint32_t *JNZ32(uint32_t to);
-  // jng rel32
-  uint32_t *JNG32(uint32_t to);
-  // jnge rel32
-  uint32_t *JNGE32(uint32_t to);
-  // jnl rel32
-  uint32_t *JNL32(uint32_t to);
-  // jnle rel32
-  uint32_t *JNLE32(uint32_t to);
-  // jo rel32
-  uint32_t *JO32(uint32_t to);
-  // jno rel32
-  uint32_t *JNO32(uint32_t to);
 
   // call func
   void CALLFunc(uint32_t func);

@@ -227,15 +227,15 @@ void ix86::MOVZX32M16toR(gp_reg_t to, void *from) {
 
 // CMOV
 
-void ix86::CMOV32RtoR(cmov_cc_t cc, gp_reg_t to, gp_reg_t from) {
+void ix86::CMOV32RtoR(cc_t cc, gp_reg_t to, gp_reg_t from) {
   write8(0x0F);
-  write8(cc);
+  write8(0x40 | cc);
   ModRM(3, to, from);
 }
 
-void ix86::CMOV32MtoR(cmov_cc_t cc, gp_reg_t to, void *from) {
+void ix86::CMOV32MtoR(cc_t cc, gp_reg_t to, void *from) {
   write8(0x0F);
-  write8(cc);
+  write8(0x40 | cc);
   ModRM(0, to, DISP32);
   write32(from);
 }
@@ -578,15 +578,15 @@ void ix86::NEG32R(gp_reg_t from) {
 
 // jump instructions
 
-uint8_t *ix86::J8Rel(int32_t cc, int32_t to) {
-  write8(cc);
+uint8_t *ix86::J8Rel(cc_t cc, int32_t to) {
+  write8(0x70 | cc);
   write8(to);
   return (uint8_t *)(x86Ptr - 1);
 }
 
-uint32_t *ix86::J32Rel(int32_t cc, int32_t to) {
+uint32_t *ix86::J32Rel(cc_t cc, int32_t to) {
   write8(0x0F);
-  write8(cc);
+  write8(0x80 | cc);
   write32(to);
   return (uint32_t *)(x86Ptr - 4);
 }
@@ -606,118 +606,6 @@ uint32_t *ix86::JMP32(uint32_t to) {
 void ix86::JMP32R(int32_t to) {
   write8(0xFF);
   ModRM(3, 4, to);
-}
-
-uint8_t *ix86::JE8(uint8_t to) {
-  return J8Rel(0x74, to);
-}
-
-uint8_t *ix86::JZ8(uint8_t to) {
-  return J8Rel(0x74, to);
-}
-
-uint8_t *ix86::JG8(uint8_t to) {
-  return J8Rel(0x7F, to);
-}
-
-uint8_t *ix86::JGE8(uint8_t to) {
-  return J8Rel(0x7D, to);
-}
-
-uint8_t *ix86::JL8(uint8_t to) {
-  return J8Rel(0x7C, to);
-}
-
-uint8_t *ix86::JLE8(uint8_t to) {
-  return J8Rel(0x7E, to);
-}
-
-uint8_t *ix86::JNE8(uint8_t to) {
-  return J8Rel(0x75, to);
-}
-
-uint8_t *ix86::JNZ8(uint8_t to) {
-  return J8Rel(0x75, to);
-}
-
-uint8_t *ix86::JNG8(uint8_t to) {
-  return J8Rel(0x7E, to);
-}
-
-uint8_t *ix86::JNGE8(uint8_t to) {
-  return J8Rel(0x7C, to);
-}
-
-uint8_t *ix86::JNL8(uint8_t to) {
-  return J8Rel(0x7D, to);
-}
-
-uint8_t *ix86::JNLE8(uint8_t to) {
-  return J8Rel(0x7F, to);
-}
-
-uint8_t *ix86::JO8(uint8_t to) {
-  return J8Rel(0x70, to);
-}
-
-uint8_t *ix86::JNO8(uint8_t to) {
-  return J8Rel(0x71, to);
-}
-
-uint32_t *ix86::JE32(uint32_t to) {
-  return J32Rel(0x84, to);
-}
-
-uint32_t *ix86::JZ32(uint32_t to) {
-  return J32Rel(0x84, to);
-}
-
-uint32_t *ix86::JG32(uint32_t to) {
-  return J32Rel(0x8F, to);
-}
-
-uint32_t *ix86::JGE32(uint32_t to) {
-  return J32Rel(0x8D, to);
-}
-
-uint32_t *ix86::JL32(uint32_t to) {
-  return J32Rel(0x8C, to);
-}
-
-uint32_t *ix86::JLE32(uint32_t to) {
-  return J32Rel(0x8E, to);
-}
-
-uint32_t *ix86::JNE32(uint32_t to) {
-  return J32Rel(0x85, to);
-}
-
-uint32_t *ix86::JNZ32(uint32_t to) {
-  return J32Rel(0x85, to);
-}
-
-uint32_t *ix86::JNG32(uint32_t to) {
-  return J32Rel(0x8E, to);
-}
-
-uint32_t *ix86::JNGE32(uint32_t to) {
-  return J32Rel(0x8C, to);
-}
-
-uint32_t *ix86::JNL32(uint32_t to) {
-  return J32Rel(0x8D, to);
-}
-
-uint32_t *ix86::JNLE32(uint32_t to) {
-  return J32Rel(0x8F, to);
-}
-
-uint32_t *ix86::JO32(uint32_t to) {
-  return J32Rel(0x80, to);
-}
-
-uint32_t *ix86::JNO32(uint32_t to) {
-  return J32Rel(0x81, to);
 }
 
 void ix86::CALLFunc(uint32_t func) {
