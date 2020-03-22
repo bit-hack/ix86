@@ -68,17 +68,17 @@ struct ix86 {
   };
 
   enum cc_t {
-    CC_O  = 0x0, // overflow         JO    (OF=1)
+    CC_O = 0x0,  // overflow         JO    (OF=1)
     CC_NO = 0x1, // not overflow     JNO   (OF=0)
-    CC_C  = 0x2, // carry            JC    (CF=1)
+    CC_C = 0x2,  // carry            JC    (CF=1)
     CC_AE = 0x3, // above or equal   JAE   (CF=0)
     CC_EQ = 0x4, // equal            JE    (ZF=1)
     CC_NE = 0x5, // not equal        JNE   (ZF=0)
     CC_BE = 0x6, // below or equal   JBE   (CF=1 or ZF=1)
     CC_AB = 0x7, // above            JA    (CF=0 and ZF=0)
-    CC_S  = 0x8, // sign             JS    (SF=1)
+    CC_S = 0x8,  // sign             JS    (SF=1)
     CC_NS = 0x9, // not sign         JNS   (SF=0)
-    CC_P  = 0xa, // parity           JP    (PF=1)
+    CC_P = 0xa,  // parity           JP    (PF=1)
     CC_NP = 0xb, // parity odd       JNP   (PF=0)
     CC_LT = 0xc, // less             JL    (SF!=OF)
     CC_GE = 0xd, // greater or equal JGE   (SF=OF)
@@ -91,6 +91,16 @@ struct ix86 {
       : start((int8_t *)dst)
       , ptr((int8_t *)dst)
       , end((int8_t *)dst + size) {
+  }
+
+  // return pointer to the code buffer
+  uint8_t *code() const {
+    return (uint8_t *)start;
+  }
+
+  // return the instruction stream
+  void reset() {
+    ptr = start;
   }
 
   // write value to code buffer
