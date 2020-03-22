@@ -31,6 +31,25 @@
 struct ix86 {
 
   enum gp_reg_t {
+    // 8bit regs
+    AL = 0,
+    CL = 1,
+    DL = 2,
+    BL = 3,
+    AH = 4,
+    CH = 5,
+    DH = 6,
+    BH = 7,
+    // 16 bit regs
+    AX = 0,
+    CX = 1,
+    DX = 2,
+    BX = 3,
+    SP = 4,
+    BP = 5,
+    SI = 6,
+    DI = 7,
+    // 32 bit regs
     EAX = 0,
     ECX = 1,
     EDX = 2,
@@ -67,16 +86,18 @@ struct ix86 {
     CC_GT = 0xf, // greater          JG    (ZF=0 and SF=OF)
   };
 
-  ix86(void *ptr, size_t size)
-      : x86Ptr((int8_t *)ptr), endPtr((int8_t *)ptr + size) {
+  // construct with target code buffer
+  ix86(void *dst, size_t size)
+      : start((int8_t *)dst)
+      , ptr((int8_t *)dst)
+      , end((int8_t *)dst + size) {
   }
 
-  // write value to code stream
+  // write value to code buffer
   void write8(const uint8_t val);
   void write16(const uint16_t val);
   void write32(const uint32_t val);
   void write32(void *val);
-  void write64(const uint64_t val);
 
   // set jump target
   void setJ8(uint8_t *j8);
@@ -85,10 +106,8 @@ struct ix86 {
   // align instruction stream
   void align(int32_t bytes);
 
-  void ModRM(int32_t mod, int32_t rm, int32_t reg);
-  void SibSB(int32_t ss, int32_t rm, int32_t index);
-
-  // mov instructions
+  void modRM(int32_t mod, int32_t rm, int32_t reg);
+  void sibSB(int32_t ss, int32_t rm, int32_t index);
 
   // mov r32 to r32
   void MOV32RtoR(gp_reg_t to, gp_reg_t from);
@@ -145,8 +164,6 @@ struct ix86 {
   void CMOV32RtoR(cc_t cc, gp_reg_t to, gp_reg_t from);
   // conditional move
   void CMOV32MtoR(cc_t cc, gp_reg_t to, void *from);
-
-  // arithmetic instructions
 
   // add imm32 to r32
   void ADD32ItoR(gp_reg_t to, uint32_t from);
@@ -212,8 +229,6 @@ struct ix86 {
   // idiv eax by m32 to edx:eax
   void IDIV32M(void *from);
 
-  // shifting instructions
-
   // rotate carry right
   void RCR32ItoR(int32_t to, int32_t from);
 
@@ -231,8 +246,6 @@ struct ix86 {
   void SAR32ItoR(gp_reg_t to, uint8_t from);
   // sar cl to r32
   void SAR32CLtoR(gp_reg_t to);
-
-  // logical instructions
 
   // or imm32 to r32
   void OR32ItoR(gp_reg_t to, uint32_t from);
@@ -272,8 +285,6 @@ struct ix86 {
   // neg r32
   void NEG32R(gp_reg_t from);
 
-  // jump instructions
-
   // conditional jump
   uint8_t *CJMP8Rel(cc_t cc, int32_t to);
   uint32_t *CJMP32Rel(cc_t cc, int32_t to);
@@ -293,8 +304,6 @@ struct ix86 {
   void CALL32R(gp_reg_t to);
   // call m32
   void CALL32M(void *to);
-
-  // misc instructions
 
   // bit test
   void BT32ItoR(gp_reg_t to, int32_t from);
@@ -342,7 +351,8 @@ struct ix86 {
   void RET();
 
 protected:
-  int8_t *x86Ptr;
-  const int8_t *endPtr;
+  int8_t *start;
+  int8_t *ptr;
+  const int8_t *end;
 
 }; // struct ix86
