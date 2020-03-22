@@ -225,7 +225,7 @@ void ix86::MOVZX32M16toR(gp_reg_t to, void *from) {
   write32(from);
 }
 
-// CMOV
+// conditional move instructions
 
 void ix86::CMOV32RtoR(cc_t cc, gp_reg_t to, gp_reg_t from) {
   write8(0x0F);
@@ -240,7 +240,7 @@ void ix86::CMOV32MtoR(cc_t cc, gp_reg_t to, void *from) {
   write32(from);
 }
 
-// ADD
+// add instructions
 
 void ix86::ADD32ItoR(gp_reg_t to, uint32_t from) {
   if (to == EAX) {
@@ -276,6 +276,8 @@ void ix86::ADD32MtoR(gp_reg_t to, void *from) {
   write32(from);
 }
 
+// add with carry instructions
+
 void ix86::ADC32ItoR(gp_reg_t to, uint32_t from) {
   if (to == EAX) {
     write8(0x15);
@@ -297,6 +299,8 @@ void ix86::ADC32MtoR(gp_reg_t to, void *from) {
   write32(from);
 }
 
+// increment instructions
+
 void ix86::INC32R(gp_reg_t to) {
   write8(0x40 + to);
 }
@@ -306,6 +310,8 @@ void ix86::INC32M(void *to) {
   ModRM(0, 0, DISP32);
   write32(to);
 }
+
+// subtract instructions
 
 void ix86::SUB32ItoR(gp_reg_t to, uint32_t from) {
   if (to == EAX) {
@@ -328,6 +334,8 @@ void ix86::SUB32MtoR(gp_reg_t to, void *from) {
   write32(from);
 }
 
+// subtract with borrow instructions
+
 void ix86::SBB32ItoR(gp_reg_t to, uint32_t from) {
   if (to == EAX) {
     write8(0x1D);
@@ -349,6 +357,8 @@ void ix86::SBB32MtoR(gp_reg_t to, void *from) {
   write32(from);
 }
 
+// decrement instructions
+
 void ix86::DEC32R(gp_reg_t to) {
   write8(0x48 + to);
 }
@@ -358,6 +368,8 @@ void ix86::DEC32M(void *to) {
   ModRM(0, 1, DISP32);
   write32(to);
 }
+
+// multiply instructions
 
 void ix86::MUL32R(gp_reg_t from) {
   write8(0xF7);
@@ -369,6 +381,8 @@ void ix86::MUL32M(void *from) {
   ModRM(0, 4, DISP32);
   write32(from);
 }
+
+// integer multiply instructions
 
 void ix86::IMUL32R(gp_reg_t from) {
   write8(0xF7);
@@ -386,14 +400,11 @@ void ix86::IMUL32RtoR(gp_reg_t to, gp_reg_t from) {
   ModRM(3, to, from);
 }
 
+// divide instructions
+
 void ix86::DIV32R(gp_reg_t from) {
   write8(0xF7);
   ModRM(3, 6, from);
-}
-
-void ix86::IDIV32R(gp_reg_t from) {
-  write8(0xF7);
-  ModRM(3, 7, from);
 }
 
 void ix86::DIV32M(void *from) {
@@ -402,13 +413,20 @@ void ix86::DIV32M(void *from) {
   write32(from);
 }
 
+// integer divide instructions
+
+void ix86::IDIV32R(gp_reg_t from) {
+  write8(0xF7);
+  ModRM(3, 7, from);
+}
+
 void ix86::IDIV32M(void *from) {
   write8(0xF7);
   ModRM(0, 7, DISP32);
   write32(from);
 }
 
-// shifting
+// rotate carry right instructions
 
 void ix86::RCR32ItoR(int32_t to, int32_t from) {
   if (from == 1) {
@@ -420,6 +438,8 @@ void ix86::RCR32ItoR(int32_t to, int32_t from) {
     write8(from);
   }
 }
+
+// shift left instructions
 
 void ix86::SHL32ItoR(gp_reg_t to, uint8_t from) {
   if (from == 1) {
@@ -437,6 +457,8 @@ void ix86::SHL32CLtoR(gp_reg_t to) {
   ModRM(3, 4, to);
 }
 
+// shift right instructions
+
 void ix86::SHR32ItoR(gp_reg_t to, uint8_t from) {
   if (from == 1) {
     write8(0xd1);
@@ -453,6 +475,8 @@ void ix86::SHR32CLtoR(gp_reg_t to) {
   ModRM(3, 5, to);
 }
 
+// shift arithmetic right instructions
+
 void ix86::SAR32ItoR(gp_reg_t to, uint8_t from) {
   write8(0xC1);
   ModRM(3, 7, to);
@@ -463,6 +487,8 @@ void ix86::SAR32CLtoR(gp_reg_t to) {
   write8(0xD3);
   ModRM(3, 7, to);
 }
+
+// bitwise or instructions
 
 void ix86::OR32ItoR(gp_reg_t to, uint32_t from) {
   if (to == EAX) {
@@ -498,6 +524,8 @@ void ix86::OR32MtoR(gp_reg_t to, void *from) {
   write32(from);
 }
 
+// bitwise xor instructions
+
 void ix86::XOR32ItoR(gp_reg_t to, uint32_t from) {
   if (to == EAX) {
     write8(0x35);
@@ -531,6 +559,8 @@ void ix86::XOR32MtoR(gp_reg_t to, void *from) {
   ModRM(0, to, DISP32);
   write32(from);
 }
+
+// bitwise and instructions
 
 void ix86::AND32ItoR(gp_reg_t to, uint32_t from) {
   if (to == EAX) {
@@ -566,10 +596,14 @@ void ix86::AND32MtoR(gp_reg_t to, void *from) {
   write32(from);
 }
 
+// bitwise not instruction
+
 void ix86::NOT32R(gp_reg_t from) {
   write8(0xF7);
   ModRM(3, 2, from);
 }
+
+// arithmetic negate instruction
 
 void ix86::NEG32R(gp_reg_t from) {
   write8(0xF7);
@@ -578,13 +612,13 @@ void ix86::NEG32R(gp_reg_t from) {
 
 // jump instructions
 
-uint8_t *ix86::J8Rel(cc_t cc, int32_t to) {
+uint8_t *ix86::CJMP8Rel(cc_t cc, int32_t to) {
   write8(0x70 | cc);
   write8(to);
   return (uint8_t *)(x86Ptr - 1);
 }
 
-uint32_t *ix86::J32Rel(cc_t cc, int32_t to) {
+uint32_t *ix86::CJMP32Rel(cc_t cc, int32_t to) {
   write8(0x0F);
   write8(0x80 | cc);
   write32(to);
@@ -608,6 +642,8 @@ void ix86::JMP32R(int32_t to) {
   ModRM(3, 4, to);
 }
 
+// call subroutine instructions
+
 void ix86::CALLFunc(uint32_t func) {
   uint32_t to = func - ((uint32_t)x86Ptr + 5);
   write8(0xE8);
@@ -630,11 +666,15 @@ void ix86::CALL32M(void *to) {
   write32(to);
 }
 
+// bit test instruction
+
 void ix86::BT32ItoR(gp_reg_t to, int32_t from) {
   write16(0xba0f);
   write8(0xe0 | to);
   write8(from);
 }
+
+// compare instruction
 
 void ix86::CMP32ItoR(gp_reg_t to, uint32_t from) {
   if (to == EAX) {
@@ -664,6 +704,8 @@ void ix86::CMP32MtoR(gp_reg_t to, void *from) {
   write32(from);
 }
 
+// test instruction
+
 void ix86::TEST32ItoR(gp_reg_t to, uint32_t from) {
   if (to == EAX) {
     write8(0xA9);
@@ -679,39 +721,33 @@ void ix86::TEST32RtoR(gp_reg_t to, gp_reg_t from) {
   ModRM(3, from, to);
 }
 
-void ix86::SET8R(int32_t cc, gp_reg_t to) {
+// conditional byte set instructions
+
+void ix86::SET8R(cc_t cc, gp_reg_t to) {
   write8(0x0F);
   write8(cc);
   write8(0xC0 | to);
 }
 
-void ix86::SETS8R(gp_reg_t to) {
-  SET8R(0x98, to);
-}
-
-void ix86::SETL8R(gp_reg_t to) {
-  SET8R(0x9C, to);
-}
-
-void ix86::SETB8R(gp_reg_t to) {
-  SET8R(0x92, to);
-}
-
-void ix86::SETNZ8R(gp_reg_t to) {
-  SET8R(0x95, to);
-}
+// convert byte to word instruction
 
 void ix86::CBW() {
   write16(0x9866);
 }
 
+// convert word to doubleword instruction
+
 void ix86::CWD() {
   write8(0x98);
 }
 
+// convert doubleword to quadword instruction
+
 void ix86::CDQ() {
   write8(0x99);
 }
+
+// stack push instructions
 
 void ix86::PUSH32R(gp_reg_t from) {
   write8(0x50 | from);
@@ -728,17 +764,25 @@ void ix86::PUSH32I(uint32_t from) {
   write32(from);
 }
 
+// stack pop instruction
+
 void ix86::POP32R(gp_reg_t from) {
   write8(0x58 | from);
 }
+
+// push general purpose registers
 
 void ix86::PUSHA32() {
   write8(0x60);
 }
 
+// pop general purpose registers
+
 void ix86::POPA32() {
   write8(0x61);
 }
+
+// return from subroutine instruction
 
 void ix86::RET() {
   write8(0xC3);

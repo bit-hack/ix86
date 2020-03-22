@@ -275,8 +275,8 @@ struct ix86 {
   // jump instructions
 
   // conditional jump
-  uint8_t *J8Rel(cc_t cc, int32_t to);
-  uint32_t *J32Rel(cc_t cc, int32_t to);
+  uint8_t *CJMP8Rel(cc_t cc, int32_t to);
+  uint32_t *CJMP32Rel(cc_t cc, int32_t to);
 
   // jmp rel8
   uint8_t *JMP8(uint8_t to);
@@ -314,15 +314,7 @@ struct ix86 {
   void TEST32RtoR(gp_reg_t to, gp_reg_t from);
 
   // set byte on condition
-  void SET8R(int32_t cc, gp_reg_t to);
-  // set byte if sign (SF=1)
-  void SETS8R(gp_reg_t to);
-  // set byte if less (SF!=OF)
-  void SETL8R(gp_reg_t to);
-  // Set byte if below (CF=1)
-  void SETB8R(gp_reg_t to);
-  // Set byte if not equal (ZF=0)
-  void SETNZ8R(gp_reg_t to);
+  void SET8R(cc_t cc, gp_reg_t to);
 
   // convert byte to word
   void CBW();
