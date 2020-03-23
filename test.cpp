@@ -12,15 +12,17 @@
     return false;                                                              \
   }
 
+using namespace runasm;
+
 struct test_t {
   test_t(const char *name) : name(name) {}
-  virtual bool run(ix86 &x86) = 0;
+  virtual bool run(runasm_t &x86) = 0;
   const char *name;
 };
 
 namespace {
 
-int32_t call_code(ix86 &x86) {
+int32_t call_code(runasm_t &x86) {
   typedef int (*func_t)(void);
   int (*func)(void) = (func_t)x86.code();
   return func();
@@ -32,8 +34,8 @@ std::vector<test_t *> tests;
 
 struct test_RET_t : public test_t {
   test_RET_t() : test_t("RET") {}
-  bool run(ix86 &x86) {
-    x86.MOV32ItoR(ix86::EAX, 1234);
+  bool run(runasm_t &x86) {
+    x86.MOV_32ItoR(EAX, 1234);
     x86.RET(); // <--
     int val = call_code(x86);
     TEST_ASSERT(val == 1234);
@@ -41,12 +43,12 @@ struct test_RET_t : public test_t {
   }
 };
 
-struct test_MOV32RtoR_t : public test_t {
-  test_MOV32RtoR_t() : test_t("MOV32RtoR") {}
-  bool run(ix86 &x86) {
+struct test_MOV_32RtoR_t : public test_t {
+  test_MOV_32RtoR_t() : test_t("MOV_32RtoR") {}
+  bool run(runasm_t &x86) {
     int value = 3625;
-    x86.MOV32ItoR(ix86::ECX, value);
-    x86.MOV32RtoR(ix86::EAX, ix86::ECX); // <--
+    x86.MOV_32ItoR(ECX, value);
+    x86.MOV_32RtoR(EAX, ECX); // <--
     x86.RET();
     int val = call_code(x86);
     TEST_ASSERT(val == value);
@@ -54,12 +56,12 @@ struct test_MOV32RtoR_t : public test_t {
   }
 };
 
-struct test_MOV32RtoM_t : public test_t {
-  test_MOV32RtoM_t() : test_t("MOV32RtoM") {}
-  bool run(ix86 &x86) {
+struct test_MOV_32RtoM_t : public test_t {
+  test_MOV_32RtoM_t() : test_t("MOV_32RtoM") {}
+  bool run(runasm_t &x86) {
     int value = -1;
-    x86.MOV32ItoR(ix86::EAX, 54321);
-    x86.MOV32RtoM(&value, ix86::EAX); // <--
+    x86.MOV_32ItoR(EAX, 54321);
+    x86.MOV_32RtoM(&value, EAX); // <--
     x86.RET();
     int val = call_code(x86);
     TEST_ASSERT(54321 == value);
@@ -67,11 +69,11 @@ struct test_MOV32RtoM_t : public test_t {
   }
 };
 
-struct test_MOV32MtoR_t : public test_t {
-  test_MOV32MtoR_t() : test_t("MOV32MtoR") {}
-  bool run(ix86 &x86) {
+struct test_MOV_32MtoR_t : public test_t {
+  test_MOV_32MtoR_t() : test_t("MOV_32MtoR") {}
+  bool run(runasm_t &x86) {
     int value = 3625;
-    x86.MOV32MtoR(ix86::EAX, &value); // <--
+    x86.MOV_32MtoR(EAX, &value); // <--
     x86.RET();
     int val = call_code(x86);
     TEST_ASSERT(val == value);
@@ -79,11 +81,11 @@ struct test_MOV32MtoR_t : public test_t {
   }
 };
 
-struct test_MOV32ItoR_t : public test_t {
-  test_MOV32ItoR_t() : test_t("MOV32ItoR") {}
-  bool run(ix86 &x86) {
+struct test_MOV_32ItoR_t : public test_t {
+  test_MOV_32ItoR_t() : test_t("MOV_32ItoR") {}
+  bool run(runasm_t &x86) {
     int value = 472581;
-    x86.MOV32ItoR(ix86::EAX, value); // <--
+    x86.MOV_32ItoR(EAX, value); // <--
     x86.RET();
     int val = call_code(x86);
     TEST_ASSERT(val == value);
@@ -91,11 +93,11 @@ struct test_MOV32ItoR_t : public test_t {
   }
 };
 
-struct test_MOV32ItoM_t : public test_t {
-  test_MOV32ItoM_t() : test_t("MOV32ItoM") {}
-  bool run(ix86 &x86) {
+struct test_MOV_32ItoM_t : public test_t {
+  test_MOV_32ItoM_t() : test_t("MOV_32ItoM") {}
+  bool run(runasm_t &x86) {
     int value = -1;
-    x86.MOV32ItoM(&value, 12345); // <--
+    x86.MOV_32ItoM(&value, 12345); // <--
     x86.RET();
     int val = call_code(x86);
     TEST_ASSERT(12345 == value);
@@ -103,12 +105,12 @@ struct test_MOV32ItoM_t : public test_t {
   }
 };
 
-struct test_MOV16RtoM_t : public test_t {
-  test_MOV16RtoM_t() : test_t("MOV16RtoM") {}
-  bool run(ix86 &x86) {
+struct test_MOV_16RtoM_t : public test_t {
+  test_MOV_16RtoM_t() : test_t("MOV_16RtoM") {}
+  bool run(runasm_t &x86) {
     uint16_t value = -1;
-    x86.MOV32ItoR(ix86::EAX, 0x7FFF1234);
-    x86.MOV16RtoM(&value, ix86::AX); // <--
+    x86.MOV_32ItoR(EAX, 0x7FFF1234);
+    x86.MOV_16RtoM(&value, AX); // <--
     x86.RET();
     int val = call_code(x86);
     TEST_ASSERT(0x1234 == value);
@@ -116,12 +118,12 @@ struct test_MOV16RtoM_t : public test_t {
   }
 };
 
-struct test_MOV16MtoR_t : public test_t {
-  test_MOV16MtoR_t() : test_t("MOV16MtoR") {}
-  bool run(ix86 &x86) {
+struct test_MOV_16MtoR_t : public test_t {
+  test_MOV_16MtoR_t() : test_t("MOV_16MtoR") {}
+  bool run(runasm_t &x86) {
     uint16_t value = 0x1337;
-    x86.MOV32ItoR(ix86::EAX, 0);
-    x86.MOV16MtoR(ix86::AX, &value); // <--
+    x86.MOV_32ItoR(EAX, 0);
+    x86.MOV_16MtoR(AX, &value); // <--
     x86.RET();
     int val = call_code(x86);
     TEST_ASSERT(1234 == value);
@@ -129,11 +131,11 @@ struct test_MOV16MtoR_t : public test_t {
   }
 };
 
-struct test_MOV16ItoR_t : public test_t {
-  test_MOV16ItoR_t() : test_t("MOV16ItoR") {}
-  bool run(ix86 &x86) {
+struct test_MOV_16ItoR_t : public test_t {
+  test_MOV_16ItoR_t() : test_t("MOV_16ItoR") {}
+  bool run(runasm_t &x86) {
     uint16_t value = -1;
-    x86.MOV16ItoM(&value, 0x3456); // <--
+    x86.MOV_16ItoM(&value, 0x3456); // <--
     x86.RET();
     int val = call_code(x86);
     TEST_ASSERT(0x3456 == value);
@@ -141,9 +143,30 @@ struct test_MOV16ItoR_t : public test_t {
   }
 };
 
+struct test_JMP_32_t : public test_t {
+  test_JMP_32_t() : test_t("JMP_32") {}
+  bool run(runasm_t &x86) {
+    rel32_t J1 = x86.JMP_32(); // <--
+
+    label_t L1 = x86.label();
+    x86.MOV_32ItoR(EAX, 0);
+    x86.RET();
+
+    label_t L2 = x86.label();
+    x86.MOV_32ItoR(EAX, 1);
+    x86.RET();
+
+    x86.setTarget(J1, L2);
+
+    int val = call_code(x86);
+    TEST_ASSERT(val == 1);
+    return true;
+  }
+};
+
 struct test_dummy_t : public test_t {
   test_dummy_t() : test_t("dummy") {}
-  bool run(ix86 &x86) {
+  bool run(runasm_t &x86) {
     return true;
   }
 };
@@ -152,17 +175,19 @@ void collect_tests() {
   // test ret
   tests.push_back(new test_RET_t);
   // test mov
-  tests.push_back(new test_MOV32RtoR_t);
-  tests.push_back(new test_MOV32RtoM_t);
-  tests.push_back(new test_MOV32MtoR_t);
-  // TODO: MOV32RmtoR
-  // TODO: MOV32RmStoR
-  // TODO: MOV32RtoRm
-  // TODO: MOV32RtoRmS
-  tests.push_back(new test_MOV32ItoR_t);
-  tests.push_back(new test_MOV32ItoM_t);
-  tests.push_back(new test_MOV16RtoM_t);
-  tests.push_back(new test_MOV16ItoR_t);
+  tests.push_back(new test_MOV_32RtoR_t);
+  tests.push_back(new test_MOV_32RtoM_t);
+  tests.push_back(new test_MOV_32MtoR_t);
+  // TODO: MOV_32RmtoR
+  // TODO: MOV_32RmStoR
+  // TODO: MOV_32RtoRm
+  // TODO: MOV_32RtoRmS
+  tests.push_back(new test_MOV_32ItoR_t);
+  tests.push_back(new test_MOV_32ItoM_t);
+  tests.push_back(new test_MOV_16RtoM_t);
+  tests.push_back(new test_MOV_16ItoR_t);
+
+  tests.push_back(new test_JMP_32_t);
 
   tests.push_back(new test_dummy_t);
 }
@@ -177,7 +202,7 @@ int main(int argc, const char **args) {
   if (!mem) {
     return 1;
   }
-  ix86 x86{mem, size};
+  runasm_t x86{mem, size};
 
   printf("--------------------------------\n");
 
