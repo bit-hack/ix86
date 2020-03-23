@@ -1,6 +1,6 @@
 #include <cassert>
 
-#include "ix86.h"
+#include "runasm.h"
 
 namespace runasm {
 

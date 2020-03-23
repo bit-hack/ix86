@@ -5,7 +5,7 @@
 #include <cstdio>
 #include <vector>
 
-#include "ix86.h"
+#include "runasm.h"
 
 #define TEST_ASSERT(X)                                                         \
   if (!(X)) {                                                                  \
