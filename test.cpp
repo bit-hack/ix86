@@ -129,6 +129,18 @@ struct test_MOV16MtoR_t : public test_t {
   }
 };
 
+struct test_MOV16ItoR_t : public test_t {
+  test_MOV16ItoR_t() : test_t("MOV16ItoR") {}
+  bool run(ix86 &x86) {
+    uint16_t value = -1;
+    x86.MOV16ItoM(&value, 0x3456); // <--
+    x86.RET();
+    int val = call_code(x86);
+    TEST_ASSERT(0x3456 == value);
+    return true;
+  }
+};
+
 struct test_dummy_t : public test_t {
   test_dummy_t() : test_t("dummy") {}
   bool run(ix86 &x86) {
@@ -150,6 +162,7 @@ void collect_tests() {
   tests.push_back(new test_MOV32ItoR_t);
   tests.push_back(new test_MOV32ItoM_t);
   tests.push_back(new test_MOV16RtoM_t);
+  tests.push_back(new test_MOV16ItoR_t);
 
   tests.push_back(new test_dummy_t);
 }

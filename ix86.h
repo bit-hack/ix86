@@ -1,30 +1,16 @@
-/***************************************************************************
- *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.           *
- ***************************************************************************/
-
-// ix86 definitions v0.5.1
-//  Authors: linuzappz <linuzappz@pcsx.net>
-//           alexey silinov
-
-// nice reference at:
-//   https://www.felixcloutier.com/x86/index.html
-
 #pragma once
+
+//
+// Small X86 dynarec engine
+//   github.com/bit-hack
+//
+// Based on ix86 definitions v0.5.1 by:
+//   linuzappz <linuzappz@pcsx.net>
+//   alexey silinov
+//
+// Nice x86 reference at:
+//   https://www.felixcloutier.com/x86/index.html
+//
 
 #include <cstdint>
 
@@ -98,7 +84,7 @@ struct ix86 {
     return (uint8_t *)start;
   }
 
-  // return the instruction stream
+  // reset the instruction stream
   void reset() {
     ptr = start;
   }
