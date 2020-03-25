@@ -43,21 +43,14 @@ enum gp_reg16_t {
 
 // 32 bit regs
 enum gp_reg32_t {
-  EAX = 0,
-  ECX = 1,
-  EDX = 2,
+  EAX = 0,  // caller save
+  ECX = 1,  // caller save
+  EDX = 2,  // caller save
   EBX = 3,
   ESP = 4,
   EBP = 5,
   ESI = 6,
   EDI = 7,
-};
-
-enum scale_t {
-  SCALE1 = 0,
-  SCALE2 = 1,
-  SCALE4 = 2,
-  SCALE8 = 3,
 };
 
 enum cc_t {
@@ -82,9 +75,9 @@ enum cc_t {
 // helper types
 typedef uint8_t *rel8_t;
 typedef uint32_t *rel32_t;
-typedef void *mem8_t;
-typedef void *mem16_t;
-typedef void *mem32_t;
+typedef uint8_t *mem8_t;
+typedef uint16_t *mem16_t;
+typedef uint32_t *mem32_t;
 
 struct label_t {
 
@@ -130,6 +123,25 @@ protected:
   const type_t type;
 };
 
+struct sib_t {
+
+  sib_t(uint32_t scale, gp_reg32_t index, gp_reg32_t base)
+      : i(index), b(base) {
+    assert(index != ESP);
+    switch (scale) {
+    case 1: s = 0; break;
+    case 2: s = 1; break;
+    case 4: s = 2; break;
+    case 8: s = 3; break;
+    default: assert(!"invalid scale value");
+    }
+  }
+
+  uint32_t s;
+  gp_reg32_t i;
+  gp_reg32_t b;
+};
+
 struct runasm_t {
 
   // construct with target code buffer
@@ -168,228 +180,222 @@ struct runasm_t {
   // return a label at this point in the code stream
   label_t label() const;
 
-  // mov r32 to r32
-  void MOV_32RtoR(gp_reg32_t to, gp_reg32_t from);
-  // mov r32 to m32
-  void MOV_32RtoM(mem32_t to, gp_reg32_t from);
-  // mov m32 to r32
-  void MOV_32MtoR(gp_reg32_t to, mem32_t from);
-  // mov [r32] to r32
-  void MOV_32RmtoR(gp_reg32_t to, deref_t from);
-  // mov [r32][r32*scale] to r32
-  void MOV_32RmStoR(gp_reg32_t to,
-                    gp_reg32_t from,
-                    gp_reg32_t from2,
-                    scale_t scale);
-  // mov r32 to [r32]
-  void MOV_32RtoRm(deref_t to, gp_reg32_t from);
-  // mov r32 to [r32][r32*scale]
-  void MOV_32RtoRmS(gp_reg32_t to,
-                    gp_reg32_t to2,
-                    scale_t scale,
-                    gp_reg32_t from);
-  // mov imm32 to r32
-  void MOV_32ItoR(gp_reg32_t to, uint32_t from);
-  // mov imm32 to m32
-  void MOV_32ItoM(mem32_t to, uint32_t from);
+  // mov r32, r32
+  void MOV(gp_reg32_t dst, gp_reg32_t src);
+  // mov [m32], r32
+  void MOV(mem32_t dst, gp_reg32_t src);
+  // mov r32, [m32]
+  void MOV(gp_reg32_t dst, mem32_t src);
+  // mov r32, [r32]
+  void MOV(gp_reg32_t dst, deref_t src);
+  // mov r32, [base + scale*index]
+  void MOV(gp_reg32_t dst, sib_t src);
+  // mov [r32], r32
+  void MOV(deref_t dst, gp_reg32_t src);
+  // mov [base + scale*index], r32
+  void MOV(sib_t dst, gp_reg32_t src);
+  // mov r32, imm32
+  void MOV(gp_reg32_t dst, uint32_t src);
+  // mov [m32], imm32
+  void MOV(mem32_t dst, uint32_t src);
 
   // mov r16 to m16
-  void MOV_16RtoM(mem16_t to, gp_reg16_t from);
+  void MOV(mem16_t dst, gp_reg16_t src);
   // mov m16 to r16
-  void MOV_16MtoR(gp_reg16_t to, mem16_t from);
+  void MOV(gp_reg16_t dst, mem16_t src);
   // mov imm16 to m16
-  void MOV_16ItoM(mem16_t to, uint16_t from);
+  void MOV(mem16_t dst, uint16_t src);
 
   // mov r8 to m8
-  void MOV_8RtoM(mem8_t to, gp_reg8_t from);
+  void MOV(mem8_t dst, gp_reg8_t src);
   // mov m8 to r8
-  void MOV_8MtoR(gp_reg8_t to, mem8_t from);
+  void MOV(gp_reg8_t dst, mem8_t src);
   // mov imm8 to m8
-  void MOV_8ItoM(mem8_t to, uint8_t from);
+  void MOV(mem8_t dst, uint8_t src);
 
   // mov sign extend r8 to r32
-  void MOVSX_32R8toR(gp_reg32_t to, gp_reg8_t from);
+  void MOVSX(gp_reg32_t dst, gp_reg8_t src);
   // mov sign extend m8 to r32
-  void MOVSX_32M8toR(gp_reg32_t to, mem8_t from);
+  void MOVSX(gp_reg32_t dst, mem8_t src);
   // mov sign extend r16 to r32
-  void MOVSX_32R16toR(gp_reg32_t to, gp_reg16_t from);
+  void MOVSX(gp_reg32_t dst, gp_reg16_t src);
   // mov sign extend m16 to r32
-  void MOVSX_32M16toR(gp_reg32_t to, mem16_t from);
+  void MOVSX(gp_reg32_t dst, mem16_t src);
 
   // mov zero extend r8 to r32
-  void MOVZX_32R8toR(gp_reg32_t to, gp_reg8_t from);
+  void MOVZX(gp_reg32_t dst, gp_reg8_t src);
   // mov zero extend m8 to r32
-  void MOVZX_32M8toR(gp_reg32_t to, mem8_t from);
+  void MOVZX(gp_reg32_t dst, mem8_t src);
   // mov zero extend r16 to r32
-  void MOVZX_32R16toR(gp_reg32_t to, gp_reg16_t from);
+  void MOVZX(gp_reg32_t dst, gp_reg16_t src);
   // mov zero extend m16 to r32
-  void MOVZX_32M16toR(gp_reg32_t to, mem16_t from);
+  void MOVZX(gp_reg32_t dst, mem16_t src);
 
   // conditional move
-  void CMOV_32RtoR(cc_t cc, gp_reg32_t to, gp_reg32_t from);
+  void CMOV(cc_t cc, gp_reg32_t dst, gp_reg32_t src);
   // conditional move
-  void CMOV_32MtoR(cc_t cc, gp_reg32_t to, mem32_t from);
+  void CMOV(cc_t cc, gp_reg32_t dst, mem32_t src);
 
   // add imm32 to r32
-  void ADD_32ItoR(gp_reg32_t to, uint32_t from);
+  void ADD(gp_reg32_t dst, uint32_t src);
   // add imm32 to m32
-  void ADD_32ItoM(mem32_t to, uint32_t from);
+  void ADD(mem32_t dst, uint32_t src);
   // add r32 to r32
-  void ADD_32RtoR(gp_reg32_t to, gp_reg32_t from);
+  void ADD(gp_reg32_t dst, gp_reg32_t src);
   // add r32 to m32
-  void ADD_32RtoM(mem32_t to, gp_reg32_t from);
+  void ADD(mem32_t dst, gp_reg32_t src);
   // add m32 to r32
-  void ADD_32MtoR(gp_reg32_t to, mem32_t from);
+  void ADD(gp_reg32_t dst, mem32_t src);
 
   // adc imm32 to r32
-  void ADC_32ItoR(gp_reg32_t to, uint32_t from);
+  void ADC(gp_reg32_t dst, uint32_t src);
   // adc r32 to r32
-  void ADC_32RtoR(gp_reg32_t to, gp_reg32_t from);
+  void ADC(gp_reg32_t dst, gp_reg32_t src);
   // adc m32 to r32
-  void ADC_32MtoR(gp_reg32_t to, mem32_t from);
+  void ADC(gp_reg32_t dst, mem32_t src);
 
   // inc r32
-  void INC_32R(gp_reg32_t to);
+  void INC(gp_reg32_t dst);
   // inc m32
-  void INC_32M(mem32_t to);
+  void INC(mem32_t dst);
 
   // sub imm32 to r32
-  void SUB_32ItoR(gp_reg32_t to, uint32_t from);
+  void SUB(gp_reg32_t dst, uint32_t src);
   // sub r32 to r32
-  void SUB_32RtoR(gp_reg32_t to, gp_reg32_t from);
+  void SUB(gp_reg32_t dst, gp_reg32_t src);
   // sub m32 to r32
-  void SUB_32MtoR(gp_reg32_t to, mem32_t from);
+  void SUB(gp_reg32_t dst, mem32_t src);
 
   // sbb imm32 to r32
-  void SBB_32ItoR(gp_reg32_t to, uint32_t from);
+  void SBB(gp_reg32_t dst, uint32_t src);
   // sbb r32 to r32
-  void SBB_32RtoR(gp_reg32_t to, gp_reg32_t from);
+  void SBB(gp_reg32_t dst, gp_reg32_t src);
   // sbb m32 to r32
-  void SBB_32MtoR(gp_reg32_t to, mem32_t from);
+  void SBB(gp_reg32_t dst, mem32_t src);
 
   // dec r32
-  void DEC_32R(gp_reg32_t to);
+  void DEC(gp_reg32_t dst);
   // dec m32
-  void DEC_32M(mem32_t to);
+  void DEC(mem32_t dst);
 
   // mul eax by r32 to edx:eax
-  void MUL_32R(gp_reg32_t from);
+  void MUL(gp_reg32_t src);
   // mul eax by m32 to edx:eax
-  void MUL_32M(mem32_t from);
+  void MUL(mem32_t src);
 
   // imul eax by r32 to edx:eax
-  void IMUL_32R(gp_reg32_t from);
+  void IMUL(gp_reg32_t src);
   // imul eax by m32 to edx:eax
-  void IMUL_32M(mem32_t from);
+  void IMUL(mem32_t src);
   // imul r32 by r32 to r32
-  void IMUL_32RtoR(gp_reg32_t to, gp_reg32_t from);
+  void IMUL(gp_reg32_t dst, gp_reg32_t src);
 
   // div eax by r32 to edx:eax
-  void DIV_32R(gp_reg32_t from);
+  void DIV(gp_reg32_t src);
   // div eax by m32 to edx:eax
-  void DIV_32M(mem32_t from);
+  void DIV(mem32_t src);
 
   // idiv eax by r32 to edx:eax
-  void IDIV_32R(gp_reg32_t from);
+  void IDIV(gp_reg32_t src);
   // idiv eax by m32 to edx:eax
-  void IDIV_32M(mem32_t from);
+  void IDIV(mem32_t src);
 
   // rotate carry right
-  void RCR_32ItoR(int32_t to, int32_t from);
+  void RCR(int32_t dst, int32_t src);
 
   // shl imm8 to r32
-  void SHL_32ItoR(gp_reg32_t to, uint8_t from);
+  void SHL(gp_reg32_t dst, uint8_t src);
   // shl cl to r32
-  void SHL_32CLtoR(gp_reg32_t to);
+  void SHL(gp_reg32_t dst);
 
   // shr imm8 to r32
-  void SHR_32ItoR(gp_reg32_t to, uint8_t from);
+  void SHR(gp_reg32_t dst, uint8_t src);
   // shr cl to r32
-  void SHR_32CLtoR(gp_reg32_t to);
+  void SHR(gp_reg32_t dst);
 
   // sar imm8 to r32
-  void SAR_32ItoR(gp_reg32_t to, uint8_t from);
+  void SAR(gp_reg32_t dst, uint8_t src);
   // sar cl to r32
-  void SAR_32CLtoR(gp_reg32_t to);
+  void SAR(gp_reg32_t dst);
 
   // or imm32 to r32
-  void OR_32ItoR(gp_reg32_t to, uint32_t from);
+  void OR(gp_reg32_t dst, uint32_t src);
   // or imm32 to m32
-  void OR_32ItoM(mem32_t to, uint32_t from);
+  void OR(mem32_t dst, uint32_t src);
   // or r32 to r32
-  void OR_32RtoR(gp_reg32_t to, gp_reg32_t from);
+  void OR(gp_reg32_t dst, gp_reg32_t src);
   // or r32 to m32
-  void OR_32RtoM(mem32_t to, gp_reg32_t from);
+  void OR(mem32_t dst, gp_reg32_t src);
   // or m32 to r32
-  void OR_32MtoR(gp_reg32_t to, mem32_t from);
+  void OR(gp_reg32_t dst, mem32_t src);
 
   // xor imm32 to r32
-  void XOR_32ItoR(gp_reg32_t to, uint32_t from);
+  void XOR(gp_reg32_t dst, uint32_t src);
   // xor imm32 to m32
-  void XOR_32ItoM(mem32_t to, uint32_t from);
+  void XOR(mem32_t dst, uint32_t src);
   // xor r32 to r32
-  void XOR_32RtoR(gp_reg32_t to, gp_reg32_t from);
+  void XOR(gp_reg32_t dst, gp_reg32_t src);
   // xor r32 to m32
-  void XOR_32RtoM(mem32_t to, gp_reg32_t from);
+  void XOR(mem32_t dst, gp_reg32_t src);
   // xor m32 to r32
-  void XOR_32MtoR(gp_reg32_t to, mem32_t from);
+  void XOR(gp_reg32_t dst, mem32_t src);
 
   // and imm32 to r32
-  void AND_32ItoR(gp_reg32_t to, uint32_t from);
+  void AND(gp_reg32_t dst, uint32_t src);
   // and imm32 to m32
-  void AND_32ItoM(mem32_t to, uint32_t from);
+  void AND(mem32_t dst, uint32_t src);
   // and r32 to r32
-  void AND_32RtoR(gp_reg32_t to, gp_reg32_t from);
+  void AND(gp_reg32_t dst, gp_reg32_t src);
   // and r32 to m32
-  void AND_32RtoM(mem32_t to, gp_reg32_t from);
+  void AND(mem32_t dst, gp_reg32_t src);
   // and m32 to r32
-  void AND_32MtoR(gp_reg32_t to, mem32_t from);
+  void AND(gp_reg32_t dst, mem32_t src);
 
   // not r32
-  void NOT_32R(gp_reg32_t from);
+  void NOT(gp_reg32_t src);
   // neg r32
-  void NEG_32R(gp_reg32_t from);
+  void NEG(gp_reg32_t src);
 
   // conditional jump
-  rel8_t CJMP_8Rel(cc_t cc, label_t to = label_t());
-  rel32_t CJMP_32Rel(cc_t cc, label_t to = label_t());
+  rel8_t Jcc8(cc_t cc, label_t to = label_t());
+  rel32_t Jcc32(cc_t cc, label_t to = label_t());
 
   // jmp rel8
-  rel8_t JMP_8(label_t to = label_t());
+  rel8_t JMP8(label_t to = label_t());
   // jmp rel32
-  rel32_t JMP_32(label_t to = label_t());
+  rel32_t JMP32(label_t to = label_t());
   // jmp r32
-  void JMP_32R(gp_reg32_t to);
+  void JMP(gp_reg32_t to);
 
   // call near, relative, displacement relative to next instruction
-  void CALL_32I(void *func);
+  void CALL(void *func);
   // call near, relative, displacement relative to next instruction
-  rel32_t CALL_32(label_t to = label_t());
+  rel32_t CALL(label_t to = label_t());
   // call near, relative, displacement relative to next instruction
-  void CALL_32R(gp_reg32_t to);
+  void CALL(gp_reg32_t to);
   // call far, absolute indirect, address given in m16:32
   // XXX: (mem32_t *to)
-  void CALL_32M(mem32_t to);
+  void CALL_32M(void *to);
 
   // bit test
-  void BT_32ItoR(gp_reg32_t to, int32_t from);
+  void BT(gp_reg32_t dst, int32_t src);
 
   // cmp imm32 to r32
-  void CMP_32ItoR(gp_reg32_t to, uint32_t from);
+  void CMP(gp_reg32_t dst, uint32_t src);
   // cmp imm32 to m32
-  void CMP_32ItoM(mem32_t to, uint32_t from);
+  void CMP(mem32_t dst, uint32_t src);
   // cmp r32 to r32
-  void CMP_32RtoR(gp_reg32_t to, gp_reg32_t from);
+  void CMP(gp_reg32_t dst, gp_reg32_t src);
   // cmp m32 to r32
-  void CMP_32MtoR(gp_reg32_t to, mem32_t from);
+  void CMP(gp_reg32_t dst, mem32_t src);
 
   // test imm32 to r32
-  void TEST_32ItoR(gp_reg32_t to, uint32_t from);
+  void TEST(gp_reg32_t dst, uint32_t src);
   // test r32 to r32
-  void TEST_32RtoR(gp_reg32_t to, gp_reg32_t from);
+  void TEST(gp_reg32_t dst, gp_reg32_t src);
 
   // set byte on condition
-  void SET_8R(cc_t cc, gp_reg32_t to);
+  void SET(cc_t cc, gp_reg32_t dst);
 
   // convert byte to word
   void CBW();
@@ -399,19 +405,19 @@ struct runasm_t {
   void CDQ();
 
   // push r32 to stack
-  void PUSH_32R(gp_reg32_t from);
+  void PUSH(gp_reg32_t src);
   // push m32 to stack
-  void PUSH_32M(mem32_t from);
+  void PUSH(mem32_t src);
   // push imm32 to stack
-  void PUSH_32I(uint32_t from);
+  void PUSH(uint32_t src);
 
   // pop r32 from stack
-  void POP_32R(gp_reg32_t from);
+  void POP(gp_reg32_t src);
 
   // push All General-Purpose Registers
-  void PUSHA_32();
+  void PUSHA();
   // pop All General-Purpose Registers
-  void POPA_32();
+  void POPA();
 
   // return
   void RET();
