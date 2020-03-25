@@ -38,13 +38,13 @@ void runasm_t::write32(void *val) {
 }
 
 void runasm_t::setTarget(rel8_t j8, label_t target) {
-  uint32_t jump = ((uint32_t)target - (uint32_t)j8) - 1;
+  uint32_t jump = ((uint32_t)target.ptr - (uint32_t)j8) - 1;
   assert(jump <= 0x7f);
   *j8 = (uint8_t)jump;
 }
 
 void runasm_t::setTarget(rel32_t j32, label_t target) {
-  *j32 = ((uint32_t)target - (uint32_t)j32) - 4;
+  *j32 = ((uint32_t)target.ptr - (uint32_t)j32) - 4;
 }
 
 void runasm_t::setTarget(rel8_t j8) {
@@ -91,25 +91,31 @@ void runasm_t::MOV_32MtoR(gp_reg32_t to, mem32_t from) {
   write32(from);
 }
 
-void runasm_t::MOV_32RmtoR(gp_reg32_t to, gp_reg32_t from) {
+void runasm_t::MOV_32RmtoR(gp_reg32_t to, deref_t from) {
   write8(0x8B);
-  modRM(0, to, from);
+  assert(from.is_reg());
+  modRM(0, to, from.reg);
 }
 
-void runasm_t::MOV_32RmStoR(gp_reg32_t to, gp_reg32_t from, gp_reg32_t from2,
-                        scale_t scale) {
+void runasm_t::MOV_32RmStoR(gp_reg32_t to,
+                            gp_reg32_t from,
+                            gp_reg32_t from2,
+                            scale_t scale) {
   write8(0x8B);
   modRM(0, to, 0x4);
   sibSB(scale, from2, from);
 }
 
-void runasm_t::MOV_32RtoRm(gp_reg32_t to, gp_reg32_t from) {
+void runasm_t::MOV_32RtoRm(deref_t to, gp_reg32_t from) {
   write8(0x89);
-  modRM(0, from, to);
+  assert(to.is_reg());
+  modRM(0, from, to.reg);
 }
 
-void runasm_t::MOV_32RtoRmS(gp_reg32_t to, gp_reg32_t to2, scale_t scale,
-                        gp_reg32_t from) {
+void runasm_t::MOV_32RtoRmS(gp_reg32_t to,
+                            gp_reg32_t to2,
+                            scale_t scale,
+                            gp_reg32_t from) {
   write8(0x89);
   modRM(0, from, 0x4);
   sibSB(scale, to2, to);
@@ -153,14 +159,14 @@ void runasm_t::MOV_16ItoM(mem16_t to, uint16_t from) {
   write16(from);
 }
 
-void runasm_t::MOV_8RtoM(mem8_t to, gp_reg32_t from) {
+void runasm_t::MOV_8RtoM(mem8_t to, gp_reg8_t from) {
   assert(to);
   write8(0x88);
   modRM(0, from, DISP32);
   write32(to);
 }
 
-void runasm_t::MOV_8MtoR(gp_reg32_t to, mem8_t from) {
+void runasm_t::MOV_8MtoR(gp_reg8_t to, mem8_t from) {
   assert(from);
   write8(0x8A);
   modRM(0, to, DISP32);
@@ -685,7 +691,7 @@ void runasm_t::JMP_32R(gp_reg32_t to) {
 
 // call subroutine instructions
 
-void runasm_t::CALLFunc(void *func) {
+void runasm_t::CALL_32I(void *func) {
   assert(func);
   write8(0xE8);
   write32(0u);

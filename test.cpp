@@ -93,6 +93,19 @@ struct test_MOV_32ItoR_t : public test_t {
   }
 };
 
+struct test_MOV_32RmtoR_t : public test_t {
+  test_MOV_32RmtoR_t() : test_t("MOV_32RmtoR") {}
+  bool run(runasm_t &x86) {
+    int value = 472581;
+    x86.MOV_32ItoR(EBX, (uint32_t)&value);
+    x86.MOV_32RmtoR(EAX, deref_t(EBX)); // <--
+    x86.RET();
+    int val = call_code(x86);
+    TEST_ASSERT(val == value);
+    return true;
+  }
+};
+
 struct test_MOV_32ItoM_t : public test_t {
   test_MOV_32ItoM_t() : test_t("MOV_32ItoM") {}
   bool run(runasm_t &x86) {
@@ -143,6 +156,27 @@ struct test_MOV_16ItoR_t : public test_t {
   }
 };
 
+struct test_JMP_8_t : public test_t {
+  test_JMP_8_t() : test_t("JMP_8") {}
+  bool run(runasm_t &x86) {
+    rel8_t J1 = x86.JMP_8(); // <--
+
+    label_t L1 = x86.label();
+    x86.MOV_32ItoR(EAX, 0);
+    x86.RET();
+
+    label_t L2 = x86.label();
+    x86.MOV_32ItoR(EAX, 1);
+    x86.RET();
+
+    x86.setTarget(J1, L2);
+
+    int val = call_code(x86);
+    TEST_ASSERT(val == 1);
+    return true;
+  }
+};
+
 struct test_JMP_32_t : public test_t {
   test_JMP_32_t() : test_t("JMP_32") {}
   bool run(runasm_t &x86) {
@@ -164,6 +198,57 @@ struct test_JMP_32_t : public test_t {
   }
 };
 
+struct test_CALL_32I_t : public test_t {
+  test_CALL_32I_t() : test_t("CALL_32I") {}
+  static int foo;
+  static void f() {
+    foo = 1;
+  }
+  bool run(runasm_t &x86) {
+    x86.CALL_32I(f); // <--
+    x86.RET();
+    call_code(x86);
+    TEST_ASSERT(foo == 1);
+    return true;
+  }
+};
+int test_CALL_32I_t::foo = 0;
+
+struct test_CALL_32_t : public test_t {
+  test_CALL_32_t() : test_t("CALL_32") {}
+  bool run(runasm_t &x86) {
+    x86.XOR_32RtoR(EAX, EAX);
+    rel32_t rel = x86.CALL_32(); // <--
+    x86.RET();
+    label_t L1 = x86.label();
+    x86.XOR_32RtoR(EAX, EAX);
+    x86.INC_32R(EAX);
+    x86.RET();
+    x86.setTarget(rel, L1);
+
+    int val = call_code(x86);
+    TEST_ASSERT(val == 1);
+    return true;
+  }
+};
+
+struct test_CALL_32M_t : public test_t {
+  test_CALL_32M_t() : test_t("CALL_32M") {}
+  static int foo;
+  static void f() {
+    foo = 1;
+  }
+  bool run(runasm_t &x86) {
+    void *ptr = f;
+    x86.CALL_32M(&ptr); // <--
+    x86.RET();
+    call_code(x86);
+    TEST_ASSERT(foo == 1);
+    return true;
+  }
+};
+int test_CALL_32M_t::foo = 0;
+
 struct test_dummy_t : public test_t {
   test_dummy_t() : test_t("dummy") {}
   bool run(runasm_t &x86) {
@@ -178,16 +263,20 @@ void collect_tests() {
   tests.push_back(new test_MOV_32RtoR_t);
   tests.push_back(new test_MOV_32RtoM_t);
   tests.push_back(new test_MOV_32MtoR_t);
-  // TODO: MOV_32RmtoR
-  // TODO: MOV_32RmStoR
-  // TODO: MOV_32RtoRm
-  // TODO: MOV_32RtoRmS
+
+  tests.push_back(new test_MOV_32RmtoR_t);
+
   tests.push_back(new test_MOV_32ItoR_t);
   tests.push_back(new test_MOV_32ItoM_t);
   tests.push_back(new test_MOV_16RtoM_t);
   tests.push_back(new test_MOV_16ItoR_t);
 
+  tests.push_back(new test_JMP_8_t);
   tests.push_back(new test_JMP_32_t);
+
+  tests.push_back(new test_CALL_32I_t);
+  tests.push_back(new test_CALL_32_t);
+  tests.push_back(new test_CALL_32M_t);
 
   tests.push_back(new test_dummy_t);
 }

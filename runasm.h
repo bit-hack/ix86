@@ -82,10 +82,53 @@ enum cc_t {
 // helper types
 typedef uint8_t *rel8_t;
 typedef uint32_t *rel32_t;
-typedef void *label_t;
 typedef void *mem8_t;
 typedef void *mem16_t;
 typedef void *mem32_t;
+
+struct label_t {
+
+  label_t() : ptr(nullptr) {
+  }
+
+  label_t(void *p) : ptr(p) {
+  }
+
+  operator bool() const {
+    return ptr != nullptr;
+  }
+
+  void * const ptr;
+};
+
+struct deref_t {
+
+  deref_t(gp_reg32_t r) : reg(r), type(type_reg) {
+  }
+
+  deref_t(mem32_t m) : mem(m), type(type_mem) {
+  }
+
+  union {
+    gp_reg32_t reg;
+    mem32_t mem;
+  };
+
+  bool is_reg() const {
+    return type == type_reg;
+  }
+
+  bool is_mem() const {
+    return type == type_mem;
+  }
+
+protected:
+  enum type_t {
+    type_reg,
+    type_mem,
+  };
+  const type_t type;
+};
 
 struct runasm_t {
 
@@ -122,9 +165,6 @@ struct runasm_t {
   // align instruction stream
   void align(int32_t bytes);
 
-  void modRM(int32_t mod, int32_t rm, int32_t reg);
-  void sibSB(int32_t ss, int32_t rm, int32_t index);
-
   // return a label at this point in the code stream
   label_t label() const;
 
@@ -135,14 +175,14 @@ struct runasm_t {
   // mov m32 to r32
   void MOV_32MtoR(gp_reg32_t to, mem32_t from);
   // mov [r32] to r32
-  void MOV_32RmtoR(gp_reg32_t to, gp_reg32_t from);
+  void MOV_32RmtoR(gp_reg32_t to, deref_t from);
   // mov [r32][r32*scale] to r32
   void MOV_32RmStoR(gp_reg32_t to,
                     gp_reg32_t from,
                     gp_reg32_t from2,
                     scale_t scale);
   // mov r32 to [r32]
-  void MOV_32RtoRm(gp_reg32_t to, gp_reg32_t from);
+  void MOV_32RtoRm(deref_t to, gp_reg32_t from);
   // mov r32 to [r32][r32*scale]
   void MOV_32RtoRmS(gp_reg32_t to,
                     gp_reg32_t to2,
@@ -161,9 +201,9 @@ struct runasm_t {
   void MOV_16ItoM(mem16_t to, uint16_t from);
 
   // mov r8 to m8
-  void MOV_8RtoM(mem8_t to, gp_reg32_t from);
+  void MOV_8RtoM(mem8_t to, gp_reg8_t from);
   // mov m8 to r8
-  void MOV_8MtoR(gp_reg32_t to, mem8_t from);
+  void MOV_8MtoR(gp_reg8_t to, mem8_t from);
   // mov imm8 to m8
   void MOV_8ItoM(mem8_t to, uint8_t from);
 
@@ -311,23 +351,24 @@ struct runasm_t {
   void NEG_32R(gp_reg32_t from);
 
   // conditional jump
-  rel8_t CJMP_8Rel(cc_t cc, label_t to = nullptr);
-  rel32_t CJMP_32Rel(cc_t cc, label_t to = nullptr);
+  rel8_t CJMP_8Rel(cc_t cc, label_t to = label_t());
+  rel32_t CJMP_32Rel(cc_t cc, label_t to = label_t());
 
   // jmp rel8
-  rel8_t JMP_8(label_t to = nullptr);
+  rel8_t JMP_8(label_t to = label_t());
   // jmp rel32
-  rel32_t JMP_32(label_t to = nullptr);
+  rel32_t JMP_32(label_t to = label_t());
   // jmp r32
   void JMP_32R(gp_reg32_t to);
 
-  // call func
-  void CALLFunc(void *func);
-  // call rel32
-  rel32_t CALL_32(label_t to = nullptr);
-  // call r32
+  // call near, relative, displacement relative to next instruction
+  void CALL_32I(void *func);
+  // call near, relative, displacement relative to next instruction
+  rel32_t CALL_32(label_t to = label_t());
+  // call near, relative, displacement relative to next instruction
   void CALL_32R(gp_reg32_t to);
-  // call m32
+  // call far, absolute indirect, address given in m16:32
+  // XXX: (mem32_t *to)
   void CALL_32M(mem32_t to);
 
   // bit test
@@ -376,6 +417,10 @@ struct runasm_t {
   void RET();
 
 protected:
+
+  void modRM(int32_t mod, int32_t rm, int32_t reg);
+  void sibSB(int32_t ss, int32_t rm, int32_t index);
+
   int8_t *start;
   int8_t *ptr;
   const int8_t *end;
