@@ -156,8 +156,8 @@ struct test_MOV_16ItoR_t : public test_t {
   }
 };
 
-struct test_MOV_reg_sib_4_sib_t : public test_t {
-  test_MOV_reg_sib_4_sib_t() : test_t("MOV_reg_sib_4") {}
+struct test_MOV_reg_sib_4_t : public test_t {
+  test_MOV_reg_sib_4_t() : test_t("MOV_reg_sib_4") {}
   bool run(runasm_t &x86) {
     uint32_t value[8] = {7, 6, 5, 4, 3, 2, 1, 0};
     int index = 2;
@@ -171,8 +171,8 @@ struct test_MOV_reg_sib_4_sib_t : public test_t {
   }
 };
 
-struct test_MOV_reg_sib_2_sib_t : public test_t {
-  test_MOV_reg_sib_2_sib_t() : test_t("MOV_reg_sib_2") {}
+struct test_MOV_reg_sib_2_t : public test_t {
+  test_MOV_reg_sib_2_t() : test_t("MOV_reg_sib_2") {}
   bool run(runasm_t &x86) {
     uint16_t value[8] = {7, 6, 5, 4, 3, 2, 1, 0};
     int index = 1;
@@ -186,8 +186,8 @@ struct test_MOV_reg_sib_2_sib_t : public test_t {
   }
 };
 
-struct test_MOV_reg_sib_1_sib_t : public test_t {
-  test_MOV_reg_sib_1_sib_t() : test_t("MOV_reg_sib_1") {}
+struct test_MOV_reg_sib_1_t : public test_t {
+  test_MOV_reg_sib_1_t() : test_t("MOV_reg_sib_1") {}
   bool run(runasm_t &x86) {
     uint8_t value[8] = {7, 6, 5, 4, 3, 2, 1, 0};
     int index = 1;
@@ -197,6 +197,22 @@ struct test_MOV_reg_sib_1_sib_t : public test_t {
     x86.RET();
     int val = call_code(x86);
     TEST_ASSERT(val = value[index]);
+    return true;
+  }
+};
+
+struct test_MOV_sib_4_reg_t : public test_t {
+  test_MOV_sib_4_reg_t() : test_t("MOV_sib_4_reg") {}
+  bool run(runasm_t &x86) {
+    uint32_t value[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    int index = 2;
+    x86.MOV(EAX, 10);
+    x86.MOV(ECX, (uint32_t)value);
+    x86.MOV(EDX, index);
+    x86.MOV(sib_t(4, EDX, ECX), EAX); // <--
+    x86.RET();
+    int val = call_code(x86);
+    TEST_ASSERT(10 == value[index]);
     return true;
   }
 };
@@ -309,9 +325,10 @@ void collect_tests() {
   tests.push_back(new test_MOV_32RtoM_t);
   tests.push_back(new test_MOV_32MtoR_t);
 
-  tests.push_back(new test_MOV_reg_sib_4_sib_t);
-  tests.push_back(new test_MOV_reg_sib_2_sib_t);
-  tests.push_back(new test_MOV_reg_sib_1_sib_t);
+  tests.push_back(new test_MOV_reg_sib_4_t);
+  tests.push_back(new test_MOV_reg_sib_2_t);
+  tests.push_back(new test_MOV_reg_sib_1_t);
+  tests.push_back(new test_MOV_sib_4_reg_t);
 
   tests.push_back(new test_MOV_32RmtoR_t);
 
