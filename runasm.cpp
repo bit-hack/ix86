@@ -57,17 +57,58 @@ void runasm_t::setTarget(rel32_t j32) {
   *j32 = (ptr - (int8_t *)j32) - 4;
 }
 
+void runasm_t::setTarget(std::initializer_list<rel32_t> branches,
+                         label_t target) {
+  for (auto &j32 : branches) {
+    *j32 = ((uint32_t)target.ptr - (uint32_t)j32) - 4;
+  }
+}
+
+void runasm_t::setTarget(std::initializer_list<rel8_t> branches,
+                         label_t target) {
+  for (auto &j8 : branches) {
+    uint32_t jump = ((uint32_t)target.ptr - (uint32_t)j8) - 1;
+    assert(jump <= 0x7f);
+    *j8 = (uint8_t)jump;
+  }
+}
+
 void runasm_t::align(int32_t bytes) {
   ptr = (int8_t *)(((uintptr_t)ptr + bytes) & ~(bytes - 1));
   assert(ptr <= end);
 }
 
 void runasm_t::modRM(int32_t mod, int32_t rm, int32_t reg) {
-  write8((mod << 6) | (rm << 3) | (reg));
+  write8((mod << 6) | (rm << 3) | reg);
 }
 
-void runasm_t::sibSB(int32_t ss, int32_t rm, int32_t index) {
-  write8((ss << 6) | (rm << 3) | (index));
+void runasm_t::modRMSibSB(int32_t rm, const sib_t &sib) {
+
+  //   mod  reg  r/m
+  // 
+  //   00   100  ...   SIB
+  //   01   100  ...   SIB + disp8
+  //   10   100  ...   SIB + disp32
+
+  const int8_t reg  = 4;
+  const int8_t mod = sib.is_disp ? ((sib.disp & 0xffffff00) ? 2 : 1) : 0;
+
+  modRM(mod, rm, reg);
+
+  // scale  76
+  // index    543
+  // base        210
+  write8((sib.s << 6) | (sib.i << 3) | (sib.b));
+
+  // displacement
+  switch (mod) {
+  case 1:
+    write8(sib.disp & 0xff);
+    break;
+  case 2:
+    write32(sib.disp);
+    break;
+  }
 }
 
 // mov instructions
@@ -91,30 +132,51 @@ void runasm_t::MOV(gp_reg32_t dst, mem32_t src) {
   write32(src);
 }
 
-void runasm_t::MOV(gp_reg32_t dst, deref_t src) {
+void runasm_t::MOV(gp_reg32_t dst,
+                   deref_t src) {
   write8(0x8B);
   assert(src.is_reg());
-  modRM(0, dst, src.reg);
+  if (src.reg == ESP) {
+    // special case with SIB byte
+    modRMSibSB(dst, sib_t(1, src.disp32, src.reg));
+  }
+  else {
+    if (src.disp32) {
+      modRM(2, dst, src.reg);
+      write32(src.disp32);
+    } else {
+      modRM(0, dst, src.reg);
+    }
+  }
 }
 
-void runasm_t::MOV(gp_reg32_t dst,
-                   sib_t src) {
+void runasm_t::MOV(gp_reg32_t dst, sib_t src) {
   write8(0x8B);
-  modRM(0, dst, 0x4);
-  sibSB(src.s, src.i, src.b);
+  modRMSibSB(dst, src);
 }
 
-void runasm_t::MOV(deref_t dst, gp_reg32_t src) {
+void runasm_t::MOV(deref_t dst,
+                   gp_reg32_t src) {
   write8(0x89);
   assert(dst.is_reg());
-  modRM(0, src, dst.reg);
+  if (dst.reg == ESP) {
+    // special case with SIB byte
+    modRMSibSB(src, sib_t(1, dst.disp32, dst.reg));
+  }
+  else {
+    if (dst.disp32) {
+      modRM(2, src, dst.reg);
+      write32(dst.disp32);
+    } else {
+      modRM(0, src, dst.reg);
+    }
+  }
 }
 
 void runasm_t::MOV(sib_t dst,
                    gp_reg32_t src) {
   write8(0x89);
-  modRM(0, src, 0x4);
-  sibSB(dst.s, dst.i, dst.b);
+  modRMSibSB(src, dst);
 }
 
 void runasm_t::MOV(gp_reg32_t dst, uint32_t src) {
@@ -637,6 +699,14 @@ void runasm_t::NEG(gp_reg32_t src) {
   modRM(3, 3, src);
 }
 
+void runasm_t::NOP() {
+  write8(0x90);
+}
+
+void runasm_t::INT3() {
+  write8(0xCC);
+}
+
 // jump instructions
 
 rel8_t runasm_t::Jcc8(cc_t cc, label_t dst) {
@@ -840,6 +910,24 @@ void runasm_t::POPA() {
 
 void runasm_t::RET() {
   write8(0xC3);
+}
+
+void runasm_t::_mm_add_ps(xmm_reg_t dst, xmm_reg_t src) {
+  write8(0x0f);
+  write8(0x58);
+  modRM(0x3, src, dst);
+}
+
+void runasm_t::_mm_sub_ps(xmm_reg_t dst, xmm_reg_t src) {
+  write8(0x0f);
+  write8(0x5c);
+  modRM(0x3, src, dst);
+}
+
+void runasm_t::_mm_mul_ps(xmm_reg_t dst, xmm_reg_t src) {
+  write8(0x0f);
+  write8(0x59);
+  modRM(0x3, src, dst);
 }
 
 } // namespace runasm

@@ -14,8 +14,19 @@
 
 #include <cassert>
 #include <cstdint>
+#include <initializer_list>
+
 
 namespace runasm {
+
+// Calling Conventions
+//
+//  Name                  __cdecl                 __stdcall
+//  Arg Order             Right->Left             Right->Left
+//  Caller Save           eax ecx edx             eax ecx edx
+//  Callee Save           ebx esp ebp esi edi     ebx esp ebp esi edi
+//  Cleanup               caller                  callee
+//  Return value          eax                     eax
 
 // 8bit regs
 enum gp_reg8_t {
@@ -43,14 +54,26 @@ enum gp_reg16_t {
 
 // 32 bit regs
 enum gp_reg32_t {
-  EAX = 0,  // caller save
-  ECX = 1,  // caller save
-  EDX = 2,  // caller save
+  EAX = 0,
+  ECX = 1,
+  EDX = 2,
   EBX = 3,
   ESP = 4,
   EBP = 5,
   ESI = 6,
   EDI = 7,
+};
+
+// xmm regs
+enum xmm_reg_t {
+  XMM0 = 0,
+  XMM1 = 1,
+  XMM2 = 2,
+  XMM3 = 3,
+  XMM4 = 4,
+  XMM5 = 5,
+  XMM6 = 6,
+  XMM7 = 7,
 };
 
 enum cc_t {
@@ -96,16 +119,28 @@ struct label_t {
 
 struct deref_t {
 
-  deref_t(gp_reg32_t r) : reg(r), type(type_reg) {
+  deref_t(gp_reg32_t r)
+    : reg(r)
+    , disp32(0)
+    , type(type_reg) {
   }
 
-  deref_t(mem32_t m) : mem(m), type(type_mem) {
+  deref_t(gp_reg32_t r, int32_t disp32)
+    : reg(r)
+    , disp32(disp32)
+    , type(type_reg) {
+  }
+
+  deref_t(mem32_t m)
+    : mem(m)
+    , type(type_mem) {
   }
 
   union {
     gp_reg32_t reg;
     mem32_t mem;
   };
+  int32_t disp32;
 
   bool is_reg() const {
     return type == type_reg;
@@ -125,8 +160,19 @@ protected:
 
 struct sib_t {
 
-  sib_t(uint32_t scale, gp_reg32_t index, gp_reg32_t base)
-      : i(index), b(base) {
+  explicit sib_t(uint32_t scale, int32_t disp, gp_reg32_t base)
+      : b(base), i(ESP), disp(disp), is_disp(true) {
+    switch (scale) {
+    case 1: s = 0; break;
+    case 2: s = 1; break;
+    case 4: s = 2; break;
+    case 8: s = 3; break;
+    default: assert(!"invalid scale value");
+    }
+  }
+
+  explicit sib_t(uint32_t scale, gp_reg32_t index, gp_reg32_t base)
+      : i(index), b(base), is_disp(false) {
     assert(index != ESP);
     switch (scale) {
     case 1: s = 0; break;
@@ -137,9 +183,11 @@ struct sib_t {
     }
   }
 
-  uint32_t s;
   gp_reg32_t i;
   gp_reg32_t b;
+  int32_t disp;
+  bool is_disp;
+  uint8_t s;
 };
 
 struct runasm_t {
@@ -173,6 +221,8 @@ struct runasm_t {
   void setTarget(rel32_t op);
   void setTarget(rel8_t op, label_t target);
   void setTarget(rel32_t op, label_t target);
+  void setTarget(std::initializer_list<rel32_t> op, label_t target);
+  void setTarget(std::initializer_list<rel8_t> op, label_t target);
 
   // align instruction stream
   void align(int32_t bytes);
@@ -186,18 +236,19 @@ struct runasm_t {
   void MOV(mem32_t dst, gp_reg32_t src);
   // mov r32, [m32]
   void MOV(gp_reg32_t dst, mem32_t src);
-  // mov r32, [r32]
+  // mov r32, [r32 + disp32]
   void MOV(gp_reg32_t dst, deref_t src);
-  // mov r32, [base + scale*index]
-  void MOV(gp_reg32_t dst, sib_t src);
-  // mov [r32], r32
+  // mov [r32 + disp32], r32
   void MOV(deref_t dst, gp_reg32_t src);
-  // mov [base + scale*index], r32
-  void MOV(sib_t dst, gp_reg32_t src);
   // mov r32, imm32
   void MOV(gp_reg32_t dst, uint32_t src);
   // mov [m32], imm32
   void MOV(mem32_t dst, uint32_t src);
+
+  // mov r32, [base + scale*index]
+  void MOV(gp_reg32_t dst, sib_t src);
+  // mov [base + scale*index], r32
+  void MOV(sib_t dst, gp_reg32_t src);
 
   // mov r16 to m16
   void MOV(mem16_t dst, gp_reg16_t src);
@@ -356,6 +407,12 @@ struct runasm_t {
   // neg r32
   void NEG(gp_reg32_t src);
 
+  // no operation
+  void NOP();
+
+  // debug breakpoint
+  void INT3();
+
   // conditional jump
   rel8_t Jcc8(cc_t cc, label_t to = label_t());
   rel32_t Jcc32(cc_t cc, label_t to = label_t());
@@ -381,13 +438,13 @@ struct runasm_t {
   void BT(gp_reg32_t dst, int32_t src);
 
   // cmp imm32 to r32
-  void CMP(gp_reg32_t dst, uint32_t src);
+  void CMP(gp_reg32_t lhs, uint32_t rhs);
   // cmp imm32 to m32
-  void CMP(mem32_t dst, uint32_t src);
+  void CMP(mem32_t lhs, uint32_t rhs);
   // cmp r32 to r32
-  void CMP(gp_reg32_t dst, gp_reg32_t src);
+  void CMP(gp_reg32_t lhs, gp_reg32_t rhs);
   // cmp m32 to r32
-  void CMP(gp_reg32_t dst, mem32_t src);
+  void CMP(gp_reg32_t lhs, mem32_t rhs);
 
   // test imm32 to r32
   void TEST(gp_reg32_t dst, uint32_t src);
@@ -422,10 +479,18 @@ struct runasm_t {
   // return
   void RET();
 
-protected:
+  // add packed single precision float
+  void _mm_add_ps(xmm_reg_t dst, xmm_reg_t src);
 
+  // subtract packed single precision float
+  void _mm_sub_ps(xmm_reg_t dst, xmm_reg_t src);
+
+  // multiply packed scalar
+  void _mm_mul_ps(xmm_reg_t dst, xmm_reg_t src);
+
+protected:
   void modRM(int32_t mod, int32_t rm, int32_t reg);
-  void sibSB(int32_t ss, int32_t rm, int32_t index);
+  void modRMSibSB(int32_t reg, const sib_t &sib);
 
   int8_t *start;
   int8_t *ptr;

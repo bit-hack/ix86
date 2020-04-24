@@ -24,8 +24,14 @@ namespace {
 
 int32_t call_code(runasm_t &x86) {
   typedef int (*func_t)(void);
-  int (*func)(void) = (func_t)x86.code();
+  func_t func = (func_t)x86.code();
   return func();
+}
+
+int32_t call_code(runasm_t &x86, int arg) {
+  typedef int (*func_t)(int);
+  func_t func = (func_t)x86.code();
+  return func(arg);
 }
 
 std::vector<test_t *> tests;
@@ -163,10 +169,11 @@ struct test_MOV_reg_sib_4_t : public test_t {
     int index = 2;
     x86.MOV(ECX, (uint32_t)value);
     x86.MOV(EDX, index);
+    // should be 8b 04 91             mov eax,dword ptr [ecx+edx*4]
     x86.MOV(EAX, sib_t(4, EDX, ECX)); // <--
     x86.RET();
     int val = call_code(x86);
-    TEST_ASSERT(val = value[index]);
+    TEST_ASSERT(val == value[index]);
     return true;
   }
 };
@@ -175,13 +182,12 @@ struct test_MOV_reg_sib_2_t : public test_t {
   test_MOV_reg_sib_2_t() : test_t("MOV_reg_sib_2") {}
   bool run(runasm_t &x86) {
     uint16_t value[8] = {7, 6, 5, 4, 3, 2, 1, 0};
-    int index = 1;
     x86.MOV(ECX, (uint32_t)value);
-    x86.MOV(EDX, index);
+    x86.MOV(EDX, 1);
     x86.MOV(EAX, sib_t(2, EDX, ECX)); // <--
     x86.RET();
     int val = call_code(x86);
-    TEST_ASSERT(val = value[index]);
+    TEST_ASSERT(val == 0x00050006);
     return true;
   }
 };
@@ -190,13 +196,12 @@ struct test_MOV_reg_sib_1_t : public test_t {
   test_MOV_reg_sib_1_t() : test_t("MOV_reg_sib_1") {}
   bool run(runasm_t &x86) {
     uint8_t value[8] = {7, 6, 5, 4, 3, 2, 1, 0};
-    int index = 1;
     x86.MOV(ECX, (uint32_t)value);
-    x86.MOV(EDX, index);
+    x86.MOV(EDX, 1);
     x86.MOV(EAX, sib_t(1, EDX, ECX)); // <--
     x86.RET();
     int val = call_code(x86);
-    TEST_ASSERT(val = value[index]);
+    TEST_ASSERT(val == 0x03040506);
     return true;
   }
 };
@@ -206,14 +211,79 @@ struct test_MOV_sib_4_reg_t : public test_t {
   bool run(runasm_t &x86) {
     uint32_t value[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     int index = 2;
-    x86.MOV(EAX, 10);
+    x86.MOV(EAX, 0xaabbccdd);
     x86.MOV(ECX, (uint32_t)value);
     x86.MOV(EDX, index);
     x86.MOV(sib_t(4, EDX, ECX), EAX); // <--
     x86.RET();
     int val = call_code(x86);
-    TEST_ASSERT(10 == value[index]);
+    TEST_ASSERT(0xaabbccdd == value[index]);
     return true;
+  }
+};
+
+struct test_MOV_sib_2_reg_t : public test_t {
+  test_MOV_sib_2_reg_t() : test_t("MOV_sib_2_reg") {}
+  bool run(runasm_t &x86) {
+    uint16_t value[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    x86.MOV(EAX, 0xaabbccdd);
+    x86.MOV(ECX, (uint32_t)value);
+    x86.MOV(EDX, 1);
+    x86.MOV(sib_t(2, EDX, ECX), EAX); // <--
+    x86.RET();
+    int val = call_code(x86);
+    TEST_ASSERT(0xccdd == value[1]);
+    TEST_ASSERT(0xaabb == value[2]);
+    return true;
+  }
+};
+
+struct test_MOV_sib_1_reg_t : public test_t {
+  test_MOV_sib_1_reg_t() : test_t("MOV_sib_1_reg") {}
+  bool run(runasm_t &x86) {
+    uint8_t value[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    x86.MOV(EAX, 0xaabbccdd);
+    x86.MOV(ECX, (uint32_t)value);
+    x86.MOV(EDX, 1);
+    x86.MOV(sib_t(1, EDX, ECX), EAX); // <--
+    x86.RET();
+    int val = call_code(x86);
+    TEST_ASSERT(0xcc == value[2]);
+    return true;
+  }
+};
+
+struct test_sib_esp_1_t : public test_t {
+  test_sib_esp_1_t() : test_t("test_sib_esp_1_t") {
+  }
+  bool run(runasm_t &x86) {
+
+    // 8b 44 24 08
+    //
+    // modrm    01 000 100
+    // sib      00 100 100
+
+    x86.MOV(EAX, deref_t(ESP, 4));
+    x86.RET();
+
+    int ret = call_code(x86, 1234);
+    return ret == 1234;
+  }
+};
+
+struct test_sib_esp_2_t : public test_t {
+  test_sib_esp_2_t() : test_t("test_sib_esp_2_t") {}
+  bool run(runasm_t &x86) {
+    uint32_t x[16] = {0};
+    x86.MOV(ECX, ESP);
+    x86.MOV(ESP, uint32_t(x));
+    x86.MOV(EAX, 1234);
+    x86.MOV(deref_t(ESP, 8), EAX);
+    x86.MOV(EAX, deref_t(ESP, 8));
+    x86.MOV(ESP, ECX);
+    x86.RET();
+    int ret = call_code(x86, 1234);
+    return ret == 1234 && x[2] == 1234;
   }
 };
 
@@ -310,6 +380,103 @@ struct test_CALL_32M_t : public test_t {
 };
 int test_CALL_32M_t::foo = 0;
 
+struct test_argument_1_t : public test_t {
+
+  test_argument_1_t() : test_t("Argument_1") {
+  }
+
+  bool run(runasm_t &x86) {
+    // prologue
+    x86.PUSH(EBP);
+    x86.MOV(EBP, ESP);
+    // function
+    x86.MOV(EAX, deref_t(EBP, 8));
+    // epilogue
+    x86.MOV(ESP, EBP);
+    x86.POP(EBP);
+    x86.RET();
+    // test
+    for (int i = 0; i < 10; ++i) {
+      if (call_code(x86, i) != i) {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
+struct test_fibonacci_t: public test_t {
+
+  test_fibonacci_t() : test_t("Fibonacci") {
+  }
+
+  // reference function
+  int fib(int n) {
+    if (n <= 1)
+      return n;
+    return fib(n - 1) + fib(n - 2);
+  }
+
+  bool run(runasm_t &x86) {
+
+    // top of the function to be callable
+    auto FUNC = x86.label();
+
+    // prologue
+    x86.PUSH(EBP);
+    x86.MOV(EBP, ESP);
+
+    // function
+    x86.MOV(EAX, deref_t(EBP, 8));      // get argument
+    x86.MOV(ECX, 1);
+    x86.CMP(EAX, ECX);
+    auto L1_ = x86.Jcc32(cc_t::CC_GT);  // n > 1
+    auto L2_ = x86.Jcc32(cc_t::CC_GT);  // n > 1
+
+    // epilogue
+    x86.MOV(ESP, EBP);
+    x86.POP(EBP);
+    x86.RET();                          // return n
+
+    auto L1 = x86.label();
+    x86.setTarget(L1_, L1);
+
+    // fib(n - 1)
+    x86.MOV(EAX, deref_t(EBP, 8));      // get argument
+    x86.SUB(EAX, 1);                    // n - 1
+    x86.PUSH(EAX);
+    x86.CALL(FUNC);                     // fib(n - 1)
+    x86.ADD(ESP, 4);                    // cleanup
+    x86.PUSH(EAX);
+
+    // fib(n - 2)
+    x86.MOV(EAX, deref_t(EBP, 8));      // get argument
+    x86.SUB(EAX, 2);                    // n - 2
+    x86.PUSH(EAX);
+    x86.CALL(FUNC);                     // fib(n - 2)
+    x86.ADD(ESP, 4);                    // cleanup
+
+    // fib(n - 2) + fib(n - 1)
+    x86.POP(ECX);
+    x86.ADD(EAX, ECX);
+
+    // epilogue
+    x86.MOV(ESP, EBP);
+    x86.POP(EBP);
+    x86.RET();
+
+    // test it
+    for (int i = 0; i < 32; ++i) {
+      if (call_code(x86, i) != fib(i)) {
+        return false;
+      }
+    }
+
+    // success
+    return true;
+  }
+};
+
 struct test_dummy_t : public test_t {
   test_dummy_t() : test_t("dummy") {}
   bool run(runasm_t &x86) {
@@ -329,6 +496,11 @@ void collect_tests() {
   tests.push_back(new test_MOV_reg_sib_2_t);
   tests.push_back(new test_MOV_reg_sib_1_t);
   tests.push_back(new test_MOV_sib_4_reg_t);
+  tests.push_back(new test_MOV_sib_2_reg_t);
+  tests.push_back(new test_MOV_sib_1_reg_t);
+
+  tests.push_back(new test_sib_esp_1_t);
+  tests.push_back(new test_sib_esp_2_t);
 
   tests.push_back(new test_MOV_32RmtoR_t);
 
@@ -343,6 +515,10 @@ void collect_tests() {
   tests.push_back(new test_CALL_32I_t);
   tests.push_back(new test_CALL_32_t);
   tests.push_back(new test_CALL_32M_t);
+
+  tests.push_back(new test_argument_1_t);
+
+  tests.push_back(new test_fibonacci_t);
 
   tests.push_back(new test_dummy_t);
 }
